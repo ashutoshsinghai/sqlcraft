@@ -143,11 +143,6 @@ export default function App() {
     if (c?.starter) setSql(c.starter);
   }
 
-  function tryExample(sqlText: string) {
-    setSql(sqlText);
-    void executeSql();
-  }
-
   function insertText(text: string) {
     setSql((s) => (s ? s + " " + text : text));
   }
@@ -236,7 +231,6 @@ export default function App() {
                 solvedIds={solvedIds()}
                 activeChallengeId={activeChallenge()?.id ?? null}
                 onPickChallenge={pickChallenge}
-                onTryExample={tryExample}
                 onNextLevel={() => nextLevel() && pickLevel(nextLevel()!.id)}
                 hasNextLevel={!!nextLevel()}
               />

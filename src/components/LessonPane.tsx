@@ -9,7 +9,6 @@ interface Props {
   activeChallengeId: string | null;
   hasNextLevel: boolean;
   onPickChallenge: (c: Challenge | null) => void;
-  onTryExample: (sql: string) => void;
   onNextLevel: () => void;
 }
 
@@ -17,23 +16,6 @@ export default function LessonPane(props: Props) {
   const lessonHtml = createMemo(() => marked.parse(props.level.lesson || "*Lesson coming soon — pick a built level on the left.*") as string);
 
   const allSolved = createMemo(() => props.level.challenges.length > 0 && props.level.challenges.every((c) => props.solvedIds.includes(c.id)));
-
-  const wireUpCodeBlocks = (el: HTMLDivElement) => {
-    el.querySelectorAll("pre code").forEach((codeEl) => {
-      const sql = codeEl.textContent || "";
-      if (codeEl.parentElement?.querySelector(".try-btn")) return;
-      const pre = codeEl.parentElement as HTMLElement;
-      pre.style.position = "relative";
-      const btn = document.createElement("button");
-      btn.textContent = "▶ Try";
-      btn.className = "try-btn absolute top-2 right-2 text-[10px] px-2 py-0.5 bg-accent-soft hover:bg-accent text-bg font-medium rounded transition-colors";
-      btn.onclick = (e) => {
-        e.preventDefault();
-        props.onTryExample(sql.trim());
-      };
-      pre.appendChild(btn);
-    });
-  };
 
   return (
     <div class="h-full overflow-y-auto">
@@ -53,11 +35,7 @@ export default function LessonPane(props: Props) {
           </div>
         </div>
 
-        <div
-          ref={(el) => queueMicrotask(() => el && wireUpCodeBlocks(el))}
-          class="prose-lesson"
-          innerHTML={lessonHtml()}
-        />
+        <div class="prose-lesson" innerHTML={lessonHtml()} />
 
         <Show when={props.level.challenges.length > 0}>
           <div class="mt-14">
