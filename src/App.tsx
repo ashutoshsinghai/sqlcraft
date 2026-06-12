@@ -29,6 +29,7 @@ export default function App() {
   const [schema, setSchema] = createSignal<{ table: string; columns: { name: string; type: string }[] }[]>([]);
   const [activeChallenge, setActiveChallenge] = createSignal<Challenge | null>(null);
   const [lastGrade, setLastGrade] = createSignal<GradeResult | null>(null);
+  const [executedSql, setExecutedSql] = createSignal<string | null>(null);
   const [progress, setProgressMap] = createSignal<Record<string, "untouched" | "in-progress" | "completed">>({});
   const [solvedIds, setSolvedIds] = createSignal<string[]>([]);
 
@@ -88,8 +89,10 @@ export default function App() {
   async function executeSql() {
     if (!ready() || running()) return;
     setRunning(true);
-    const r = await runQuery(sql());
+    const queryAtRunTime = sql();
+    const r = await runQuery(queryAtRunTime);
     setResult(r);
+    setExecutedSql(queryAtRunTime);
     setRunning(false);
 
     const c = activeChallenge();
@@ -321,7 +324,12 @@ export default function App() {
             </Show>
 
             <div class="flex-1 p-4 min-h-0">
-              <ResultsTable result={result()} loading={running()} />
+              <ResultsTable
+                result={result()}
+                loading={running()}
+                executedSql={executedSql()}
+                isStale={!!executedSql() && executedSql() !== sql()}
+              />
             </div>
 
             <RightDrawer

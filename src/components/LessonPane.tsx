@@ -65,20 +65,20 @@ export default function LessonPane(props: Props) {
             <div class="space-y-3">
               <For each={props.level.challenges}>
                 {(c, i) => {
-                  const solved = props.solvedIds.includes(c.id);
-                  const active = () => props.activeChallengeId === c.id;
+                  const solved = createMemo(() => props.solvedIds.includes(c.id));
+                  const active = createMemo(() => props.activeChallengeId === c.id);
                   return (
                     <button
                       class={`w-full text-left px-5 py-4 rounded-xl border-2 transition-all relative ${
-                        active() && !solved
+                        active() && !solved()
                           ? "border-accent bg-accent/10 shadow-lg shadow-accent/10"
-                          : solved
+                          : solved()
                           ? "border-success/60 bg-success/10 hover:bg-success/15"
                           : "border-bg-border bg-bg-soft/50 hover:border-accent/30 hover:bg-bg-soft"
                       }`}
                       onClick={() => props.onPickChallenge(c)}
                     >
-                      <Show when={solved}>
+                      <Show when={solved()}>
                         <div class="absolute top-3 right-3 w-6 h-6 rounded-full bg-success/30 flex items-center justify-center text-success text-sm font-bold">
                           ✓
                         </div>
@@ -86,21 +86,21 @@ export default function LessonPane(props: Props) {
                       <div class="flex items-center gap-2 mb-2">
                         <span
                           class={`text-[10px] px-2.5 py-0.5 rounded-full font-semibold ${
-                            solved
+                            solved()
                               ? "bg-success/25 text-success"
                               : active()
                               ? "bg-accent/25 text-accent"
                               : "bg-bg-panel text-ink-muted"
                           }`}
                         >
-                          {solved ? "SOLVED" : `#${i() + 1}`}
+                          {solved() ? "SOLVED" : `#${i() + 1}`}
                         </span>
-                        <Show when={active() && !solved}>
+                        <Show when={active() && !solved()}>
                           <span class="text-[10px] text-accent font-medium">solving →</span>
                         </Show>
                       </div>
                       <div
-                        class={`text-sm leading-relaxed ${solved ? "text-ink-muted line-through decoration-success/40" : "text-ink"}`}
+                        class={`text-sm leading-relaxed ${solved() ? "text-ink-muted line-through decoration-success/40" : "text-ink"}`}
                         innerHTML={marked.parseInline(c.prompt) as string}
                       />
                     </button>
