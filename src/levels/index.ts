@@ -2,7 +2,14 @@
 import seed01 from "./01-books/seed.sql?raw";
 import lesson01 from "./01-books/lesson.md?raw";
 import { challenges as challenges01 } from "./01-books/challenges";
-import type { Challenge } from "./01-books/challenges";
+
+import seed02 from "./02-where/seed.sql?raw";
+import lesson02 from "./02-where/lesson.md?raw";
+import { challenges as challenges02 } from "./02-where/challenges";
+
+import type { Challenge } from "./types";
+export { resolveExpected } from "./types";
+export type { Challenge };
 
 export type Level = {
   id: string;
@@ -14,6 +21,7 @@ export type Level = {
   lesson: string;
   challenges: Challenge[];
   available: boolean;
+  sentinelTable?: string; // table whose presence indicates this level's seed has already run
 };
 
 export const LEVELS: Level[] = [
@@ -27,9 +35,20 @@ export const LEVELS: Level[] = [
     lesson: lesson01,
     challenges: challenges01,
     available: true,
+    sentinelTable: "books",
   },
-  // Future levels — sketches, not yet built
-  { id: "02-where", title: "Level 2 · WHERE & operators", subtitle: "Books (cont.)", concept: "WHERE, LIKE, IN, BETWEEN", dataset: "books", seed: "", lesson: "", challenges: [], available: false },
+  {
+    id: "02-where",
+    title: "Level 2 · WHERE & filters",
+    subtitle: "Books (cont.)",
+    concept: "WHERE, AND/OR, IN, BETWEEN, LIKE, NULL",
+    dataset: "books (50 rows, reused)",
+    seed: seed02,
+    lesson: lesson02,
+    challenges: challenges02,
+    available: true,
+    sentinelTable: "books",
+  },
   { id: "03-order-limit", title: "Level 3 · ORDER BY & LIMIT", subtitle: "Top songs", concept: "ORDER BY, LIMIT, DISTINCT", dataset: "songs", seed: "", lesson: "", challenges: [], available: false },
   { id: "04-aggregates", title: "Level 4 · Aggregates", subtitle: "E-commerce orders", concept: "COUNT, SUM, AVG, GROUP BY", dataset: "orders", seed: "", lesson: "", challenges: [], available: false },
   { id: "05-having", title: "Level 5 · GROUP BY & HAVING", subtitle: "E-commerce orders", concept: "HAVING, multi-column GROUP BY", dataset: "orders", seed: "", lesson: "", challenges: [], available: false },
@@ -45,4 +64,13 @@ export const LEVELS: Level[] = [
 
 export function getLevel(id: string): Level | undefined {
   return LEVELS.find((l) => l.id === id);
+}
+
+export function getNextAvailableLevel(currentId: string): Level | undefined {
+  const idx = LEVELS.findIndex((l) => l.id === currentId);
+  if (idx === -1) return undefined;
+  for (let i = idx + 1; i < LEVELS.length; i++) {
+    if (LEVELS[i].available) return LEVELS[i];
+  }
+  return undefined;
 }

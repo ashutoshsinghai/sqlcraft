@@ -2,9 +2,7 @@ import { createSignal, createEffect, onMount, Show, createMemo } from "solid-js"
 import { execSeed, runQuery, getSchema, tableExists, type QueryResult, type QueryError } from "./lib/db";
 import { grade, type GradeResult } from "./lib/grader";
 import { getPref, setPref, getProgress, setProgress } from "./lib/storage";
-import { LEVELS, getLevel } from "./levels";
-import { resolveExpected } from "./levels/01-books/challenges";
-import type { Challenge } from "./levels/01-books/challenges";
+import { LEVELS, getLevel, getNextAvailableLevel, resolveExpected, type Challenge } from "./levels";
 
 import Editor from "./components/Editor";
 import ResultsTable from "./components/ResultsTable";
@@ -13,11 +11,13 @@ import ScriptsSidebar from "./components/ScriptsSidebar";
 import SettingsPanel from "./components/SettingsPanel";
 import LessonPane from "./components/LessonPane";
 import LevelList from "./components/LevelList";
+import Celebration from "./components/Celebration";
 
 export default function App() {
   const [bootStatus, setBootStatus] = createSignal("starting up…");
   const [ready, setReady] = createSignal(false);
   const [showSettings, setShowSettings] = createSignal(false);
+  const [celebrate, setCelebrate] = createSignal(false);
 
   const [currentLevelId, setCurrentLevelId] = createSignal<string>(getPref("currentLevel", "01-books"));
   const [sql, setSql] = createSignal<string>(getPref("lastSql", "SELECT title, author FROM books LIMIT 10;"));
@@ -28,8 +28,10 @@ export default function App() {
   const [lastGrade, setLastGrade] = createSignal<GradeResult | null>(null);
   const [progress, setProgressMap] = createSignal<Record<string, "untouched" | "in-progress" | "completed">>({});
   const [solvedIds, setSolvedIds] = createSignal<string[]>([]);
+  const [showSidebar, setShowSidebar] = createSignal(true);
 
   const currentLevel = createMemo(() => getLevel(currentLevelId()));
+  const nextLevel = createMemo(() => getNextAvailableLevel(currentLevelId()));
 
   onMount(async () => {
     try {
@@ -56,8 +58,7 @@ export default function App() {
   async function ensureSeeded(levelId: string) {
     const lvl = getLevel(levelId);
     if (!lvl || !lvl.seed) return;
-    const has = await tableExists("books");
-    if (lvl.id === "01-books" && has) return;
+    if (lvl.sentinelTable && (await tableExists(lvl.sentinelTable))) return;
     await execSeed(lvl.seed);
   }
 
@@ -76,6 +77,7 @@ export default function App() {
     setCurrentLevelId(id);
     setActiveChallenge(null);
     setLastGrade(null);
+    setCelebrate(false);
     await ensureSeeded(id);
     await refreshSchema();
     await loadProgress(id);
@@ -108,8 +110,9 @@ export default function App() {
     if (cur.includes(challengeId)) return;
     const next = [...cur, challengeId];
     setSolvedIds(next);
-    const allSolved = lvl.challenges.every((ch) => next.includes(ch.id));
-    const status: "in-progress" | "completed" = allSolved ? "completed" : "in-progress";
+    const wasComplete = lvl.challenges.every((ch) => cur.includes(ch.id));
+    const nowComplete = lvl.challenges.every((ch) => next.includes(ch.id));
+    const status: "in-progress" | "completed" = nowComplete ? "completed" : "in-progress";
     await setProgress({
       levelId: lvl.id,
       status,
@@ -117,6 +120,11 @@ export default function App() {
       lastAttemptedAt: Date.now(),
     });
     setProgressMap((m) => ({ ...m, [lvl.id]: status }));
+
+    // Trigger celebration only on transition incomplete → complete
+    if (!wasComplete && nowComplete) {
+      setTimeout(() => setCelebrate(true), 600);
+    }
   }
 
   const schemaForEditor = createMemo(() => {
@@ -144,17 +152,51 @@ export default function App() {
     setSql(s);
   }
 
+  const overallProgress = createMemo(() => {
+    const built = LEVELS.filter((l) => l.available).length;
+    const done = Object.entries(progress()).filter(([id, s]) => s === "completed" && LEVELS.find((l) => l.id === id)?.available).length;
+    return { done, total: built };
+  });
+
   return (
-    <div class="h-full flex flex-col bg-bg text-ink">
-      <header class="flex items-center justify-between px-4 py-2 border-b border-bg-border bg-bg-panel/60">
-        <div class="flex items-center gap-3">
-          <div class="font-medium text-accent">sqlcraft</div>
-          <div class="text-ink-dim text-xs">{bootStatus()}</div>
+    <div class="h-full flex flex-col text-ink">
+      {/* Top bar */}
+      <header class="flex items-center justify-between px-5 py-3 border-b border-bg-border bg-bg-panel/40 backdrop-blur-sm">
+        <div class="flex items-center gap-4">
+          <button
+            class="text-ink-muted hover:text-ink p-1 -ml-1"
+            onClick={() => setShowSidebar((v) => !v)}
+            title="Toggle sidebar"
+          >
+            ☰
+          </button>
+          <div class="flex items-center gap-2.5">
+            <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-accent to-accent-soft flex items-center justify-center text-bg font-bold text-sm shadow-lg shadow-accent/30">
+              s
+            </div>
+            <div class="font-semibold text-ink tracking-tight">sqlcraft</div>
+          </div>
+          <Show when={ready()}>
+            <div class="flex items-center gap-2 text-xs text-ink-muted">
+              <div class="w-32 h-1.5 bg-bg-soft rounded-full overflow-hidden">
+                <div
+                  class="h-full bg-gradient-to-r from-accent to-accent-glow transition-all duration-500"
+                  style={{ width: `${(overallProgress().done / Math.max(overallProgress().total, 1)) * 100}%` }}
+                />
+              </div>
+              <span>{overallProgress().done}/{overallProgress().total} levels</span>
+            </div>
+          </Show>
         </div>
         <div class="flex items-center gap-2">
+          <Show when={!ready()}>
+            <div class="text-xs text-ink-muted flex items-center gap-2">
+              <div class="w-2 h-2 rounded-full bg-warn animate-pulse" /> {bootStatus()}
+            </div>
+          </Show>
           <button
             onClick={() => setShowSettings(true)}
-            class="text-xs px-2 py-1 text-ink-muted hover:text-ink rounded hover:bg-bg-panel"
+            class="text-xs px-3 py-1.5 text-ink-muted hover:text-ink rounded-md hover:bg-bg-panel transition-colors"
           >
             ⚙ settings
           </button>
@@ -163,22 +205,27 @@ export default function App() {
 
       <Show when={!ready()}>
         <div class="flex-1 flex items-center justify-center">
-          <div class="text-center">
-            <div class="text-ink-muted text-sm mb-2">{bootStatus()}</div>
-            <div class="text-ink-dim text-xs">First load downloads PGlite (~3 MB), then caches forever.</div>
+          <div class="text-center max-w-md px-4">
+            <div class="text-6xl mb-4 animate-pulse">🛠️</div>
+            <div class="text-ink text-lg font-medium mb-2">Getting your database ready…</div>
+            <div class="text-ink-muted text-sm mb-1">{bootStatus()}</div>
+            <div class="text-ink-dim text-xs">Postgres is downloading & starting (~3 MB). Cached forever after this.</div>
           </div>
         </div>
       </Show>
 
       <Show when={ready()}>
         <main class="flex-1 flex min-h-0">
-          <aside class="w-60 border-r border-bg-border bg-bg-soft p-3 overflow-y-auto space-y-5">
-            <LevelList currentId={currentLevelId()} progress={progress()} onPick={pickLevel} />
-            <SchemaSidebar schema={schema()} onInsert={insertText} />
-            <ScriptsSidebar currentSql={sql()} currentLevelId={currentLevelId()} onLoad={loadScript} />
-          </aside>
+          <Show when={showSidebar()}>
+            <aside class="w-64 border-r border-bg-border bg-bg-soft/50 p-4 overflow-y-auto space-y-6 backdrop-blur-sm">
+              <LevelList currentId={currentLevelId()} progress={progress()} onPick={pickLevel} />
+              <SchemaSidebar schema={schema()} onInsert={insertText} />
+              <ScriptsSidebar currentSql={sql()} currentLevelId={currentLevelId()} onLoad={loadScript} />
+            </aside>
+          </Show>
 
-          <section class="w-[420px] border-r border-bg-border bg-bg-soft min-w-0">
+          {/* Lesson + challenges */}
+          <section class="w-[440px] border-r border-bg-border bg-bg-soft/30 min-w-0">
             <Show when={currentLevel()}>
               <LessonPane
                 level={currentLevel()!}
@@ -187,22 +234,27 @@ export default function App() {
                 lastGrade={lastGrade()}
                 onPickChallenge={pickChallenge}
                 onTryExample={tryExample}
+                onNextLevel={() => nextLevel() && pickLevel(nextLevel()!.id)}
+                hasNextLevel={!!nextLevel()}
               />
             </Show>
           </section>
 
+          {/* Editor + results */}
           <section class="flex-1 flex flex-col min-w-0">
-            <div class="flex items-center justify-between px-3 py-2 border-b border-bg-border bg-bg-panel/40">
+            <div class="flex items-center justify-between px-4 py-2.5 border-b border-bg-border bg-bg-panel/30">
               <div class="text-xs text-ink-muted">
-                editor
-                <Show when={activeChallenge()}>
-                  <span class="ml-2 text-accent">· grading against challenge {activeChallenge()!.id}</span>
+                <Show
+                  when={activeChallenge()}
+                  fallback={<span>free play · write any query</span>}
+                >
+                  <span>solving: <span class="text-accent font-medium">{activeChallenge()!.id}</span></span>
                 </Show>
               </div>
               <button
                 onClick={executeSql}
                 disabled={running()}
-                class="text-xs px-3 py-1 bg-accent-soft hover:bg-accent text-ink rounded disabled:opacity-50 transition-colors"
+                class="text-xs px-3.5 py-1.5 bg-accent hover:bg-accent-glow text-bg font-medium rounded-md disabled:opacity-50 shadow-md shadow-accent/20 transition-all"
               >
                 {running() ? "running…" : "▶ run  (⌘↵)"}
               </button>
@@ -219,6 +271,19 @@ export default function App() {
 
       <Show when={showSettings()}>
         <SettingsPanel onClose={() => setShowSettings(false)} onExtensionsChanged={refreshSchema} />
+      </Show>
+
+      <Show when={celebrate() && currentLevel()}>
+        <Celebration
+          level={currentLevel()!}
+          next={nextLevel()}
+          totalChallenges={currentLevel()!.challenges.length}
+          onNext={() => {
+            setCelebrate(false);
+            if (nextLevel()) void pickLevel(nextLevel()!.id);
+          }}
+          onStay={() => setCelebrate(false)}
+        />
       </Show>
     </div>
   );

@@ -5,16 +5,33 @@ export default {
   theme: {
     extend: {
       colors: {
-        bg: { DEFAULT: "#0a0e14", soft: "#0f141a", panel: "#151c25", border: "#1f2933" },
-        ink: { DEFAULT: "#e6edf3", muted: "#8b95a3", dim: "#6e7681" },
-        accent: { DEFAULT: "#7aa2f7", soft: "#3d59a1" },
-        success: "#9ece6a",
-        warn: "#e0af68",
-        danger: "#f7768e",
+        // Warmer dark palette — feels more "study room", less "terminal"
+        bg: { DEFAULT: "#13131e", soft: "#1a1a28", panel: "#222234", border: "#2d2d44" },
+        ink: { DEFAULT: "#f0f0f5", muted: "#a0a0b8", dim: "#70708a" },
+        accent: { DEFAULT: "#a78bfa", soft: "#7c5cf2", glow: "#c4b5fd" },
+        success: "#86efac",
+        warn: "#fbbf24",
+        danger: "#f87171",
       },
       fontFamily: {
         mono: ["ui-monospace", "SF Mono", "Menlo", "monospace"],
-        sans: ["ui-sans-serif", "system-ui", "-apple-system", "sans-serif"],
+        sans: ['"Inter"', "ui-sans-serif", "system-ui", "-apple-system", "sans-serif"],
+      },
+      animation: {
+        "fade-in": "fadeIn 0.4s ease-out",
+        "bounce-in": "bounceIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)",
+        "pulse-glow": "pulseGlow 2s ease-in-out infinite",
+      },
+      keyframes: {
+        fadeIn: { "0%": { opacity: 0 }, "100%": { opacity: 1 } },
+        bounceIn: {
+          "0%": { opacity: 0, transform: "scale(0.7)" },
+          "100%": { opacity: 1, transform: "scale(1)" },
+        },
+        pulseGlow: {
+          "0%, 100%": { boxShadow: "0 0 20px rgba(167, 139, 250, 0.4)" },
+          "50%": { boxShadow: "0 0 30px rgba(167, 139, 250, 0.7)" },
+        },
       },
     },
   },

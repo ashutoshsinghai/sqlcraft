@@ -1,13 +1,4 @@
-import type { GradeSpec } from "../../lib/grader";
-
-export interface Challenge {
-  id: string;
-  prompt: string;
-  starter?: string;
-  hints: string[];
-  solution: string;
-  grade: GradeSpec;
-}
+import type { Challenge } from "../types";
 
 export const challenges: Challenge[] = [
   {
@@ -47,10 +38,4 @@ export const challenges: Challenge[] = [
   },
 ];
 
-// Self-grading: each challenge's `expectedRows` is computed at runtime by executing the
-// solution against the live database. This avoids hard-coding 50 rows × 3 challenges
-// and means any seed-data changes propagate automatically.
-export async function resolveExpected(c: Challenge, runQuery: (sql: string) => Promise<any>) {
-  const res = await runQuery(c.solution);
-  if (res.ok) (c.grade as any).expectedRows = res.rows;
-}
+export { resolveExpected } from "../types";
