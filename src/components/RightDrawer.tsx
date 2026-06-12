@@ -1,5 +1,6 @@
 import { Show, For, createSignal, onMount } from "solid-js";
 import { listScripts, saveScript, deleteScript, type SavedScript } from "../lib/storage";
+import { IconClose } from "./Icons";
 
 interface Props {
   open: boolean;
@@ -42,27 +43,27 @@ export default function RightDrawer(props: Props) {
           class="w-80 bg-bg-soft border-l border-bg-border h-full overflow-hidden flex flex-col animate-slide-down"
           onClick={(e) => e.stopPropagation()}
         >
-          <div class="flex items-center justify-between px-4 py-3 border-b border-bg-border">
-            <div class="flex gap-1">
+          <div class="flex items-center justify-between px-3 py-2.5 border-b border-bg-border">
+            <div class="flex gap-0.5">
               <button
                 onClick={() => props.setTab("schema")}
-                class={`text-xs px-3 py-1.5 rounded-md transition-colors ${
+                class={`label-mono px-2.5 py-1 rounded transition-colors ${
                   props.tab === "schema" ? "bg-bg-panel text-ink" : "text-ink-muted hover:text-ink"
                 }`}
               >
-                Schema
+                schema
               </button>
               <button
                 onClick={() => props.setTab("scripts")}
-                class={`text-xs px-3 py-1.5 rounded-md transition-colors ${
+                class={`label-mono px-2.5 py-1 rounded transition-colors ${
                   props.tab === "scripts" ? "bg-bg-panel text-ink" : "text-ink-muted hover:text-ink"
                 }`}
               >
-                Scripts
+                scripts
               </button>
             </div>
-            <button class="text-ink-muted hover:text-ink text-lg leading-none" onClick={props.onClose}>
-              ×
+            <button class="text-ink-muted hover:text-ink p-1 hover:bg-bg-panel rounded" onClick={props.onClose}>
+              <IconClose />
             </button>
           </div>
 

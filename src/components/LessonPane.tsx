@@ -1,6 +1,7 @@
 import { createMemo, For, Show } from "solid-js";
 import { marked } from "marked";
 import type { Level, Challenge } from "../levels";
+import { IconCheck, IconArrowRight } from "./Icons";
 
 interface Props {
   level: Level;
@@ -39,14 +40,14 @@ export default function LessonPane(props: Props) {
       <div class="px-10 py-10 max-w-2xl mx-auto">
         {/* Header */}
         <div class="mb-10 pb-6 border-b border-bg-border">
-          <div class="text-[11px] uppercase tracking-[0.15em] text-accent mb-2 font-medium">{props.level.subtitle}</div>
+          <div class="label-mono text-accent mb-2">{props.level.subtitle}</div>
           <div class="flex items-center gap-3">
-            <div class="text-xs text-ink-dim font-mono px-2.5 py-0.5 bg-bg-soft rounded-md border border-bg-border">
+            <div class="font-mono text-[11px] text-ink-muted px-2 py-0.5 bg-bg-soft border border-bg-border rounded">
               {props.level.dataset}
             </div>
             <Show when={props.level.challenges.length > 0}>
-              <div class="text-xs text-ink-dim">
-                {props.solvedIds.filter((id) => props.level.challenges.find((c) => c.id === id)).length} of {props.level.challenges.length} challenges
+              <div class="text-[11px] text-ink-dim font-mono tabular-nums">
+                {props.solvedIds.filter((id) => props.level.challenges.find((c) => c.id === id)).length}/{props.level.challenges.length} challenges
               </div>
             </Show>
           </div>
@@ -60,47 +61,49 @@ export default function LessonPane(props: Props) {
 
         <Show when={props.level.challenges.length > 0}>
           <div class="mt-14">
-            <h2 class="text-xs uppercase tracking-[0.15em] text-ink-muted mb-2 font-medium">Challenges</h2>
-            <p class="text-xs text-ink-dim mb-5">Click any challenge to start solving — the prompt and feedback appear on the right.</p>
-            <div class="space-y-3">
+            <h2 class="label-mono text-ink-muted mb-2">Challenges</h2>
+            <p class="text-xs text-ink-dim mb-5 font-mono">Click any to start solving — prompt &amp; feedback appear on the right.</p>
+            <div class="space-y-2.5">
               <For each={props.level.challenges}>
                 {(c, i) => {
                   const solved = createMemo(() => props.solvedIds.includes(c.id));
                   const active = createMemo(() => props.activeChallengeId === c.id);
                   return (
                     <button
-                      class={`w-full text-left px-5 py-4 rounded-xl border-2 transition-all relative ${
+                      class={`w-full text-left px-4 py-3.5 border transition-all relative rounded ${
                         active() && !solved()
-                          ? "border-accent bg-accent/10 shadow-lg shadow-accent/10"
+                          ? "border-accent/70 bg-accent/5"
                           : solved()
-                          ? "border-success/60 bg-success/10 hover:bg-success/15"
-                          : "border-bg-border bg-bg-soft/50 hover:border-accent/30 hover:bg-bg-soft"
+                          ? "border-success/40 bg-success/[0.04]"
+                          : "border-bg-border bg-bg-soft/40 hover:border-ink-dim hover:bg-bg-soft"
                       }`}
                       onClick={() => props.onPickChallenge(c)}
                     >
                       <Show when={solved()}>
-                        <div class="absolute top-3 right-3 w-6 h-6 rounded-full bg-success/30 flex items-center justify-center text-success text-sm font-bold">
-                          ✓
+                        <div class="absolute top-3 right-3 w-5 h-5 bg-success/20 border border-success/40 flex items-center justify-center text-success rounded">
+                          <IconCheck class="w-3 h-3" />
                         </div>
                       </Show>
-                      <div class="flex items-center gap-2 mb-2">
+                      <div class="flex items-center gap-2 mb-1.5">
                         <span
-                          class={`text-[10px] px-2.5 py-0.5 rounded-full font-semibold ${
+                          class={`label-mono px-1.5 py-0.5 rounded ${
                             solved()
-                              ? "bg-success/25 text-success"
+                              ? "bg-success/15 text-success"
                               : active()
-                              ? "bg-accent/25 text-accent"
+                              ? "bg-accent/20 text-accent"
                               : "bg-bg-panel text-ink-muted"
                           }`}
                         >
-                          {solved() ? "SOLVED" : `#${i() + 1}`}
+                          {solved() ? "solved" : `${String(i() + 1).padStart(2, "0")}`}
                         </span>
                         <Show when={active() && !solved()}>
-                          <span class="text-[10px] text-accent font-medium">solving →</span>
+                          <span class="label-mono text-accent flex items-center gap-0.5">
+                            active <IconArrowRight class="w-3 h-3" />
+                          </span>
                         </Show>
                       </div>
                       <div
-                        class={`text-sm leading-relaxed ${solved() ? "text-ink-muted line-through decoration-success/40" : "text-ink"}`}
+                        class={`text-[13.5px] leading-relaxed ${solved() ? "text-ink-muted line-through decoration-success/40" : "text-ink"}`}
                         innerHTML={marked.parseInline(c.prompt) as string}
                       />
                     </button>
@@ -110,21 +113,23 @@ export default function LessonPane(props: Props) {
             </div>
 
             <Show when={allSolved()}>
-              <div class="mt-8 p-5 bg-gradient-to-br from-accent/15 to-success/10 border border-accent/40 rounded-xl text-center">
-                <div class="text-2xl mb-2">✨</div>
-                <div class="text-ink font-medium mb-1">All challenges solved.</div>
-                <div class="text-ink-muted text-sm mb-4">Nice work on {props.level.title.split("·")[0].trim()}.</div>
+              <div class="mt-8 px-5 py-5 border border-success/30 bg-success/[0.05] rounded">
+                <div class="label-mono text-success mb-1">level complete</div>
+                <div class="text-sm text-ink-muted mb-4 font-mono">
+                  All {props.level.challenges.length} challenges solved.
+                </div>
                 <Show
                   when={props.hasNextLevel}
                   fallback={
-                    <div class="text-ink-dim text-xs">You're at the end of what's been built. More levels coming!</div>
+                    <div class="text-xs text-ink-dim font-mono">End of built content — more levels coming.</div>
                   }
                 >
                   <button
                     onClick={props.onNextLevel}
-                    class="px-5 py-2.5 bg-accent hover:bg-accent-glow text-bg font-medium rounded-lg shadow-lg shadow-accent/30 text-sm"
+                    class="flex items-center gap-2 px-3.5 py-2 bg-accent hover:bg-accent-glow text-bg font-semibold rounded transition-colors"
                   >
-                    Continue to next level →
+                    <span class="label-mono">next level</span>
+                    <IconArrowRight class="w-3.5 h-3.5 text-bg" />
                   </button>
                 </Show>
               </div>

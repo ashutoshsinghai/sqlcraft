@@ -1,6 +1,7 @@
 import { For, Show, createSignal, createEffect } from "solid-js";
 import { marked } from "marked";
 import type { Challenge } from "../levels";
+import { IconHint, IconArrowRight, IconClose } from "./Icons";
 
 interface Props {
   challenge: Challenge;
@@ -22,55 +23,61 @@ export default function ChallengeStrip(props: Props) {
   });
 
   return (
-    <div class="border-b border-bg-border bg-bg-panel/40 backdrop-blur-sm">
+    <div class="border-b border-bg-border bg-bg-soft/30">
       <div class="px-4 py-3">
         <div class="flex items-start justify-between gap-3 mb-2">
           <div class="flex items-center gap-2">
             <span
-              class={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
-                props.solved ? "bg-success/20 text-success" : "bg-accent/20 text-accent"
+              class={`label-mono px-1.5 py-0.5 rounded ${
+                props.solved ? "bg-success/15 text-success" : "bg-accent/15 text-accent"
               }`}
             >
-              {props.solved ? "✓ solved" : `challenge ${props.index + 1} of ${props.total}`}
+              {props.solved ? "solved" : `${String(props.index + 1).padStart(2, "0")}/${String(props.total).padStart(2, "0")}`}
             </span>
-            <span class="text-[11px] text-ink-dim font-mono">{props.challenge.id}</span>
+            <span class="label-mono text-ink-dim">{props.challenge.id}</span>
           </div>
-          <div class="flex items-center gap-1">
+          <div class="flex items-center gap-0.5">
             <Show when={props.hasNext}>
               <button
                 onClick={props.onNext}
-                class="text-[11px] px-2 py-1 text-ink-muted hover:text-ink rounded hover:bg-bg-panel"
+                class="flex items-center gap-1 px-2 py-1 text-ink-muted hover:text-ink hover:bg-bg-panel rounded transition-colors"
                 title="Skip to next challenge"
               >
-                skip →
+                <span class="label-mono">skip</span>
+                <IconArrowRight class="w-3 h-3" />
               </button>
             </Show>
             <button
               onClick={props.onClear}
-              class="text-[11px] px-2 py-1 text-ink-muted hover:text-ink rounded hover:bg-bg-panel"
-              title="Clear challenge — return to free play"
+              class="flex items-center gap-1 px-2 py-1 text-ink-muted hover:text-ink hover:bg-bg-panel rounded transition-colors"
+              title="Clear challenge"
             >
-              × clear
+              <IconClose class="w-3 h-3" />
+              <span class="label-mono">clear</span>
             </button>
           </div>
         </div>
-        <div class="text-sm text-ink leading-relaxed" innerHTML={marked.parseInline(props.challenge.prompt) as string} />
+        <div class="text-[13.5px] text-ink leading-relaxed mb-2.5" innerHTML={marked.parseInline(props.challenge.prompt) as string} />
 
-        <div class="mt-2 flex items-center gap-2">
+        <div class="flex items-center gap-2">
           <button
-            class="text-[11px] px-2 py-0.5 bg-bg-soft hover:bg-bg-border rounded text-ink-muted disabled:opacity-40"
+            class="flex items-center gap-1.5 px-2 py-0.5 bg-bg-soft hover:bg-bg-panel border border-bg-border rounded text-ink-muted hover:text-ink disabled:opacity-40 transition-colors"
             onClick={() => setShowHint((h) => Math.min(h + 1, props.challenge.hints.length))}
             disabled={showHint() >= props.challenge.hints.length}
           >
-            💡 hint ({showHint()}/{props.challenge.hints.length})
+            <IconHint class="w-3 h-3" />
+            <span class="label-mono">
+              hint {showHint()}/{props.challenge.hints.length}
+            </span>
           </button>
         </div>
         <Show when={showHint() > 0}>
           <div class="mt-2 space-y-1">
             <For each={props.challenge.hints.slice(0, showHint())}>
               {(h, i) => (
-                <div class="text-[11px] text-ink-muted bg-bg-soft rounded px-2 py-1.5">
-                  <span class="text-warn font-mono mr-1">#{i() + 1}</span> {h}
+                <div class="text-[12px] text-ink-muted bg-bg-soft border-l-2 border-warn/60 px-3 py-1.5 rounded">
+                  <span class="label-mono text-warn mr-1.5">#{i() + 1}</span>
+                  {h}
                 </div>
               )}
             </For>

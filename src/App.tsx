@@ -13,6 +13,7 @@ import Celebration from "./components/Celebration";
 import ChallengeStrip from "./components/ChallengeStrip";
 import GradeBanner from "./components/GradeBanner";
 import RightDrawer from "./components/RightDrawer";
+import { IconSchema, IconScripts, IconRun, IconSettings } from "./components/Icons";
 
 export default function App() {
   const [bootStatus, setBootStatus] = createSignal("starting up…");
@@ -164,56 +165,58 @@ export default function App() {
 
   return (
     <div class="h-full flex flex-col text-ink">
-      {/* Header — slim, breadcrumb, progress */}
-      <header class="flex items-center justify-between px-5 py-3 border-b border-bg-border bg-bg-soft/40 backdrop-blur-sm">
-        <div class="flex items-center gap-4">
-          <div class="flex items-center gap-2.5">
-            <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-accent to-accent-soft flex items-center justify-center text-bg font-bold text-sm shadow-md shadow-accent/20">
-              s
-            </div>
-            <div class="font-semibold text-ink tracking-tight">sqlcraft</div>
+      {/* Header */}
+      <header class="flex items-center justify-between px-4 py-2.5 border-b border-bg-border">
+        <div class="flex items-center gap-3.5">
+          <div class="font-mono text-sm tracking-tight">
+            <span class="text-ink font-medium">sql</span><span class="text-accent">/</span><span class="text-ink-muted">craft</span>
           </div>
           <Show when={ready() && currentLevel()}>
-            <div class="flex items-center gap-2 text-sm">
-              <span class="text-ink-dim">/</span>
+            <div class="flex items-center gap-2 text-xs text-ink-muted font-mono">
+              <span class="text-ink-dim">·</span>
+              <span class="text-accent">L{currentLevel()!.id.slice(0, 2)}</span>
               <span class="text-ink-muted">{currentLevel()!.title.replace(/^Level \d+ · /, "")}</span>
             </div>
           </Show>
         </div>
         <div class="flex items-center gap-4">
           <Show when={ready()}>
-            <div class="flex items-center gap-2.5 text-xs text-ink-muted">
-              <div class="w-32 h-1 bg-bg-soft rounded-full overflow-hidden">
+            <div class="flex items-center gap-2.5">
+              <div class="w-32 h-[3px] bg-bg-soft overflow-hidden">
                 <div
-                  class="h-full bg-gradient-to-r from-accent to-accent-glow transition-all duration-700"
+                  class="h-full bg-accent transition-all duration-700"
                   style={{ width: `${(overallProgress().done / Math.max(overallProgress().total, 1)) * 100}%` }}
                 />
               </div>
-              <span class="tabular-nums">{overallProgress().done}/{overallProgress().total} levels</span>
+              <span class="label-mono text-ink-muted tabular-nums">{overallProgress().done}/{overallProgress().total}</span>
             </div>
           </Show>
           <Show when={!ready()}>
-            <div class="text-xs text-ink-muted flex items-center gap-2">
-              <div class="w-2 h-2 rounded-full bg-warn animate-pulse" /> {bootStatus()}
+            <div class="text-xs text-ink-muted flex items-center gap-2 font-mono">
+              <div class="w-1.5 h-1.5 rounded-full bg-warn animate-pulse" /> {bootStatus()}
             </div>
           </Show>
           <button
             onClick={() => setShowSettings(true)}
-            class="text-sm text-ink-muted hover:text-ink p-1.5 rounded-md hover:bg-bg-panel transition-colors"
+            class="text-ink-muted hover:text-ink p-1.5 hover:bg-bg-panel transition-colors rounded"
             title="Settings"
           >
-            ⚙
+            <IconSettings />
           </button>
         </div>
       </header>
 
       <Show when={!ready()}>
-        <div class="flex-1 flex items-center justify-center">
-          <div class="text-center max-w-md px-4">
-            <div class="text-6xl mb-4 animate-pulse">🛠️</div>
-            <div class="text-ink text-lg font-medium mb-2">Setting up your database</div>
-            <div class="text-ink-muted text-sm mb-1">{bootStatus()}</div>
-            <div class="text-ink-dim text-xs">Postgres downloads once (~3 MB) and is cached forever after.</div>
+        <div class="flex-1 flex items-center justify-center bg-grid">
+          <div class="text-center max-w-md px-4 font-mono">
+            <div class="flex items-center justify-center gap-1.5 mb-4">
+              <div class="w-1.5 h-1.5 bg-accent animate-pulse" />
+              <div class="w-1.5 h-1.5 bg-accent animate-pulse" style="animation-delay: 0.15s" />
+              <div class="w-1.5 h-1.5 bg-accent animate-pulse" style="animation-delay: 0.3s" />
+            </div>
+            <div class="text-ink text-base mb-1">booting postgres</div>
+            <div class="text-ink-muted text-xs">{bootStatus()}</div>
+            <div class="text-ink-dim text-[11px] mt-3">~3 MB · cached after first load</div>
           </div>
         </div>
       </Show>
@@ -264,39 +267,33 @@ export default function App() {
             </Show>
 
             {/* Tools row */}
-            <div class="flex items-center justify-between px-4 py-2.5 border-b border-bg-border">
-              <div class="flex items-center gap-2 text-xs text-ink-muted">
-                <Show
-                  when={activeChallenge()}
-                  fallback={<span>free play</span>}
-                >
-                  <span>solving →</span>
-                </Show>
+            <div class="flex items-center justify-between px-3 py-2 border-b border-bg-border">
+              <div class="flex items-center gap-1">
                 <button
-                  onClick={() => {
-                    setDrawerTab("schema");
-                    setDrawerOpen(true);
-                  }}
-                  class="ml-2 px-2.5 py-1 hover:bg-bg-panel rounded-md text-ink-muted hover:text-ink transition-colors"
+                  onClick={() => { setDrawerTab("schema"); setDrawerOpen(true); }}
+                  class="tooltip flex items-center gap-1.5 px-2 py-1 hover:bg-bg-panel text-ink-muted hover:text-ink transition-colors rounded"
+                  data-tip="schema"
                 >
-                  📋 schema
+                  <IconSchema class="w-4 h-4" />
+                  <span class="label-mono">schema</span>
                 </button>
                 <button
-                  onClick={() => {
-                    setDrawerTab("scripts");
-                    setDrawerOpen(true);
-                  }}
-                  class="px-2.5 py-1 hover:bg-bg-panel rounded-md text-ink-muted hover:text-ink transition-colors"
+                  onClick={() => { setDrawerTab("scripts"); setDrawerOpen(true); }}
+                  class="tooltip flex items-center gap-1.5 px-2 py-1 hover:bg-bg-panel text-ink-muted hover:text-ink transition-colors rounded"
+                  data-tip="saved scripts"
                 >
-                  📁 scripts
+                  <IconScripts class="w-4 h-4" />
+                  <span class="label-mono">scripts</span>
                 </button>
               </div>
               <button
                 onClick={executeSql}
                 disabled={running()}
-                class="text-xs px-4 py-1.5 bg-accent hover:bg-accent-glow text-bg font-semibold rounded-md disabled:opacity-50 shadow-md shadow-accent/20 transition-all"
+                class="flex items-center gap-1.5 px-3 py-1.5 bg-accent hover:bg-accent-glow text-bg font-semibold disabled:opacity-50 transition-all rounded"
               >
-                {running() ? "running…" : "▶ Run  (⌘↵)"}
+                <IconRun class="text-bg" />
+                <span class="label-mono text-bg">{running() ? "running…" : "run"}</span>
+                <span class="label-mono opacity-60 text-bg ml-1">⌘↵</span>
               </button>
             </div>
 
