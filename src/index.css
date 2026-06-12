@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root { height: 100%; }
+body {
+  background: #0a0e14;
+  color: #e6edf3;
+  font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #1f2933; border-radius: 5px; }
+::-webkit-scrollbar-thumb:hover { background: #2a3441; }
+
+.cm-editor { height: 100%; font-size: 13px; }
+.cm-editor.cm-focused { outline: none; }
+.cm-scroller { font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+
+.prose-lesson h1 { font-size: 1.3rem; font-weight: 600; color: #7aa2f7; margin-bottom: 0.5rem; }
+.prose-lesson h2 { font-size: 1rem; font-weight: 600; color: #e6edf3; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+.prose-lesson p { margin-bottom: 0.75rem; line-height: 1.6; color: #c5cdd6; }
+.prose-lesson code { background: #1f2933; padding: 1px 6px; border-radius: 3px; font-family: ui-monospace, monospace; font-size: 0.9em; color: #e0af68; }
+.prose-lesson pre { background: #0f141a; border: 1px solid #1f2933; border-radius: 6px; padding: 12px; overflow-x: auto; margin: 0.75rem 0; }
+.prose-lesson pre code { background: transparent; padding: 0; color: #c5cdd6; font-size: 0.85rem; }
+.prose-lesson ul, .prose-lesson ol { padding-left: 1.5rem; margin-bottom: 0.75rem; line-height: 1.7; color: #c5cdd6; }
+.prose-lesson li { margin-bottom: 0.25rem; }
+.prose-lesson strong { color: #e6edf3; }
+.prose-lesson a { color: #7aa2f7; text-decoration: underline; }
