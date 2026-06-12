@@ -5,33 +5,101 @@
 
 html, body, #root { height: 100%; }
 body {
-  background: radial-gradient(ellipse at top left, #1c1c2e 0%, #13131e 60%);
-  color: #f0f0f5;
+  background: #0f1117;
+  color: #e8e8f0;
   font-family: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
   margin: 0;
   -webkit-font-smoothing: antialiased;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
 
-::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #2d2d44; border-radius: 5px; }
-::-webkit-scrollbar-thumb:hover { background: #3d3d5a; }
+::-webkit-scrollbar-thumb { background: #252a3a; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #2f3548; }
 
-.cm-editor { height: 100%; font-size: 13px; }
+.cm-editor { height: 100%; font-size: 13.5px; }
 .cm-editor.cm-focused { outline: none; }
 .cm-scroller { font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+.cm-gutters { background: transparent !important; border: none !important; }
 
-/* Lesson prose */
-.prose-lesson h1 { font-size: 1.5rem; font-weight: 600; color: #c4b5fd; margin-bottom: 0.75rem; letter-spacing: -0.02em; }
-.prose-lesson h2 { font-size: 1.1rem; font-weight: 600; color: #f0f0f5; margin-top: 1.75rem; margin-bottom: 0.5rem; }
-.prose-lesson p { margin-bottom: 0.9rem; line-height: 1.7; color: #d4d4e0; font-size: 0.95rem; }
-.prose-lesson code { background: #2d2d44; padding: 2px 6px; border-radius: 4px; font-family: ui-monospace, monospace; font-size: 0.85em; color: #fbbf24; }
-.prose-lesson pre { background: #0a0a14; border: 1px solid #2d2d44; border-radius: 8px; padding: 14px 16px; overflow-x: auto; margin: 0.9rem 0; position: relative; }
-.prose-lesson pre code { background: transparent; padding: 0; color: #d4d4e0; font-size: 0.85rem; line-height: 1.5; }
-.prose-lesson ul, .prose-lesson ol { padding-left: 1.5rem; margin-bottom: 0.9rem; line-height: 1.75; color: #d4d4e0; }
-.prose-lesson li { margin-bottom: 0.35rem; }
-.prose-lesson strong { color: #f0f0f5; font-weight: 600; }
-.prose-lesson a { color: #c4b5fd; text-decoration: underline; }
+/* Lesson prose — generous, readable */
+.prose-lesson {
+  font-size: 15px;
+  line-height: 1.75;
+}
+.prose-lesson h1 {
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: #f0f0f8;
+  margin-bottom: 0.75rem;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+.prose-lesson h2 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e8e8f0;
+  margin-top: 2rem;
+  margin-bottom: 0.65rem;
+  letter-spacing: -0.01em;
+}
+.prose-lesson p {
+  margin-bottom: 1.1rem;
+  color: #c8c8d8;
+}
+.prose-lesson code {
+  background: #1c2030;
+  padding: 2px 7px;
+  border-radius: 5px;
+  font-family: ui-monospace, monospace;
+  font-size: 0.85em;
+  color: #fbbf24;
+  border: 1px solid #252a3a;
+}
+.prose-lesson pre {
+  background: #0a0c14;
+  border: 1px solid #1c2030;
+  border-radius: 10px;
+  padding: 18px 20px;
+  overflow-x: auto;
+  margin: 1.2rem 0;
+  position: relative;
+}
+.prose-lesson pre code {
+  background: transparent;
+  padding: 0;
+  color: #d4d4e0;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  border: none;
+}
+.prose-lesson ul, .prose-lesson ol {
+  padding-left: 1.5rem;
+  margin-bottom: 1.1rem;
+  color: #c8c8d8;
+}
+.prose-lesson li { margin-bottom: 0.45rem; }
+.prose-lesson strong { color: #f0f0f8; font-weight: 600; }
+.prose-lesson a { color: #c4b5fd; text-decoration: underline; text-underline-offset: 3px; }
+.prose-lesson table {
+  width: auto;
+  border-collapse: collapse;
+  margin: 1.2rem 0;
+  font-size: 0.85rem;
+}
+.prose-lesson th, .prose-lesson td {
+  padding: 6px 12px;
+  border-bottom: 1px solid #252a3a;
+  text-align: left;
+}
+.prose-lesson th {
+  color: #9a9eb0;
+  font-weight: 600;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
 
 /* Shake animation for failed grading */
 @keyframes shake {
@@ -43,7 +111,7 @@ body {
 }
 .shake { animation: shake 0.4s ease-out, bounceIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
 
-/* Confetti animation */
+/* Confetti */
 @keyframes confetti-fall {
   0%   { transform: translate3d(0, -10vh, 0) rotate(0deg); opacity: 1; }
   100% { transform: translate3d(var(--dx, 0), 110vh, 0) rotate(720deg); opacity: 0; }
@@ -58,3 +126,32 @@ body {
   z-index: 100;
   pointer-events: none;
 }
+
+/* Subtle inset shadow for "raised panel" feel without borders */
+.panel-raised {
+  background: #161922;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+
+/* Hover-tooltip for icon rail */
+.tooltip { position: relative; }
+.tooltip::before {
+  content: attr(data-tip);
+  position: absolute;
+  left: calc(100% + 12px);
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 6px 10px;
+  background: #1c2030;
+  border: 1px solid #252a3a;
+  color: #e8e8f0;
+  font-size: 12px;
+  white-space: nowrap;
+  border-radius: 6px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+  z-index: 50;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+.tooltip:hover::before { opacity: 1; }

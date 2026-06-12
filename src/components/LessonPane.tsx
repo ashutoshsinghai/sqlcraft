@@ -36,15 +36,17 @@ export default function LessonPane(props: Props) {
 
   return (
     <div class="h-full overflow-y-auto">
-      <div class="p-6 max-w-2xl mx-auto">
+      <div class="px-10 py-10 max-w-2xl mx-auto">
         {/* Header */}
-        <div class="mb-6 pb-5 border-b border-bg-border">
-          <div class="text-[11px] uppercase tracking-widest text-accent mb-1.5">{props.level.subtitle}</div>
+        <div class="mb-10 pb-6 border-b border-bg-border">
+          <div class="text-[11px] uppercase tracking-[0.15em] text-accent mb-2 font-medium">{props.level.subtitle}</div>
           <div class="flex items-center gap-3">
-            <div class="text-xs text-ink-dim font-mono px-2 py-0.5 bg-bg-panel rounded">{props.level.dataset}</div>
+            <div class="text-xs text-ink-dim font-mono px-2.5 py-0.5 bg-bg-soft rounded-md border border-bg-border">
+              {props.level.dataset}
+            </div>
             <Show when={props.level.challenges.length > 0}>
               <div class="text-xs text-ink-dim">
-                {props.solvedIds.filter((id) => props.level.challenges.find((c) => c.id === id)).length}/{props.level.challenges.length} challenges
+                {props.solvedIds.filter((id) => props.level.challenges.find((c) => c.id === id)).length} of {props.level.challenges.length} challenges
               </div>
             </Show>
           </div>
@@ -57,26 +59,26 @@ export default function LessonPane(props: Props) {
         />
 
         <Show when={props.level.challenges.length > 0}>
-          <div class="mt-10">
-            <h2 class="text-xs uppercase tracking-widest text-ink-muted mb-3 font-semibold">Challenges</h2>
-            <p class="text-xs text-ink-dim mb-3">Click any challenge to start solving — the prompt and feedback will appear on the right.</p>
-            <div class="space-y-2.5">
+          <div class="mt-14">
+            <h2 class="text-xs uppercase tracking-[0.15em] text-ink-muted mb-2 font-medium">Challenges</h2>
+            <p class="text-xs text-ink-dim mb-5">Click any challenge to start solving — the prompt and feedback appear on the right.</p>
+            <div class="space-y-3">
               <For each={props.level.challenges}>
                 {(c, i) => {
                   const solved = props.solvedIds.includes(c.id);
                   const active = () => props.activeChallengeId === c.id;
                   return (
                     <button
-                      class={`w-full text-left p-3.5 rounded-xl border transition-all ${
+                      class={`w-full text-left px-5 py-4 rounded-xl border transition-all ${
                         active()
                           ? "border-accent bg-accent/10 shadow-lg shadow-accent/10"
                           : solved
-                          ? "border-success/30 bg-success/5 hover:border-success/50"
-                          : "border-bg-border bg-bg-soft hover:border-accent/40 hover:bg-bg-panel"
+                          ? "border-success/25 bg-success/5 hover:border-success/40"
+                          : "border-bg-border bg-bg-soft/50 hover:border-accent/30 hover:bg-bg-soft"
                       }`}
                       onClick={() => props.onPickChallenge(c)}
                     >
-                      <div class="flex items-center gap-2 mb-1.5">
+                      <div class="flex items-center gap-2 mb-2">
                         <span
                           class={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
                             solved ? "bg-success/20 text-success" : "bg-bg-panel text-ink-muted"

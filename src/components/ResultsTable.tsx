@@ -20,18 +20,19 @@ export default function ResultsTable(props: Props) {
   });
 
   return (
-    <div class="h-full overflow-auto bg-bg-soft border border-bg-border rounded-md">
+    <div class="h-full overflow-auto bg-bg-soft/40 border border-bg-border rounded-xl">
       <Show when={props.loading}>
-        <div class="p-4 text-ink-muted text-sm flex items-center gap-2">
+        <div class="p-5 text-ink-muted text-sm flex items-center gap-2">
           <div class="w-2 h-2 rounded-full bg-accent animate-pulse" /> Running query…
         </div>
       </Show>
 
       <Show when={!props.loading && !props.result}>
-        <div class="p-6 text-center text-ink-dim text-sm">
-          <div class="mb-2">No query yet</div>
+        <div class="p-10 text-center text-ink-dim text-sm">
+          <div class="text-2xl mb-3 opacity-50">⌨</div>
+          <div class="mb-1 text-ink-muted">Run a query to see results.</div>
           <div class="text-xs">
-            Write SQL in the editor and press <span class="font-mono text-ink-muted">⌘+Enter</span> to run.
+            Press <span class="font-mono text-ink-muted bg-bg-panel px-1.5 py-0.5 rounded">⌘ + Enter</span> in the editor.
           </div>
         </div>
       </Show>
@@ -56,11 +57,11 @@ export default function ResultsTable(props: Props) {
           const r = props.result as QueryResult;
           return (
             <div>
-              <div class="flex items-center gap-3 px-3 py-2 border-b border-bg-border text-xs text-ink-muted bg-bg-panel">
-                <span class="text-success">●</span>
-                <span>{r.rowCount} row{r.rowCount === 1 ? "" : "s"}</span>
-                <span>·</span>
-                <span>{r.durationMs}ms</span>
+              <div class="flex items-center gap-3 px-4 py-2.5 border-b border-bg-border text-xs text-ink-muted">
+                <span class="w-1.5 h-1.5 rounded-full bg-success" />
+                <span class="tabular-nums">{r.rowCount} row{r.rowCount === 1 ? "" : "s"}</span>
+                <span class="text-ink-dim">·</span>
+                <span class="tabular-nums">{r.durationMs} ms</span>
               </div>
               <Show
                 when={r.rows.length > 0}

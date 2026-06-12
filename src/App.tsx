@@ -6,20 +6,21 @@ import { LEVELS, getLevel, getNextAvailableLevel, resolveExpected, type Challeng
 
 import Editor from "./components/Editor";
 import ResultsTable from "./components/ResultsTable";
-import SchemaSidebar from "./components/SchemaSidebar";
-import ScriptsSidebar from "./components/ScriptsSidebar";
 import SettingsPanel from "./components/SettingsPanel";
 import LessonPane from "./components/LessonPane";
 import LevelList from "./components/LevelList";
 import Celebration from "./components/Celebration";
 import ChallengeStrip from "./components/ChallengeStrip";
 import GradeBanner from "./components/GradeBanner";
+import RightDrawer from "./components/RightDrawer";
 
 export default function App() {
   const [bootStatus, setBootStatus] = createSignal("starting up…");
   const [ready, setReady] = createSignal(false);
   const [showSettings, setShowSettings] = createSignal(false);
   const [celebrate, setCelebrate] = createSignal(false);
+  const [drawerOpen, setDrawerOpen] = createSignal(false);
+  const [drawerTab, setDrawerTab] = createSignal<"schema" | "scripts">("schema");
 
   const [currentLevelId, setCurrentLevelId] = createSignal<string>(getPref("currentLevel", "01-books"));
   const [sql, setSql] = createSignal<string>(getPref("lastSql", "SELECT title, author FROM books LIMIT 10;"));
@@ -30,7 +31,6 @@ export default function App() {
   const [lastGrade, setLastGrade] = createSignal<GradeResult | null>(null);
   const [progress, setProgressMap] = createSignal<Record<string, "untouched" | "in-progress" | "completed">>({});
   const [solvedIds, setSolvedIds] = createSignal<string[]>([]);
-  const [showSidebar, setShowSidebar] = createSignal(true);
 
   const currentLevel = createMemo(() => getLevel(currentLevelId()));
   const nextLevel = createMemo(() => getNextAvailableLevel(currentLevelId()));
@@ -122,8 +122,6 @@ export default function App() {
       lastAttemptedAt: Date.now(),
     });
     setProgressMap((m) => ({ ...m, [lvl.id]: status }));
-
-    // Trigger celebration only on transition incomplete → complete
     if (!wasComplete && nowComplete) {
       setTimeout(() => setCelebrate(true), 600);
     }
@@ -152,6 +150,7 @@ export default function App() {
 
   function loadScript(s: string) {
     setSql(s);
+    setDrawerOpen(false);
   }
 
   const overallProgress = createMemo(() => {
@@ -162,35 +161,34 @@ export default function App() {
 
   return (
     <div class="h-full flex flex-col text-ink">
-      {/* Top bar */}
-      <header class="flex items-center justify-between px-5 py-3 border-b border-bg-border bg-bg-panel/40 backdrop-blur-sm">
+      {/* Header — slim, breadcrumb, progress */}
+      <header class="flex items-center justify-between px-5 py-3 border-b border-bg-border bg-bg-soft/40 backdrop-blur-sm">
         <div class="flex items-center gap-4">
-          <button
-            class="text-ink-muted hover:text-ink p-1 -ml-1"
-            onClick={() => setShowSidebar((v) => !v)}
-            title="Toggle sidebar"
-          >
-            ☰
-          </button>
           <div class="flex items-center gap-2.5">
-            <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-accent to-accent-soft flex items-center justify-center text-bg font-bold text-sm shadow-lg shadow-accent/30">
+            <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-accent to-accent-soft flex items-center justify-center text-bg font-bold text-sm shadow-md shadow-accent/20">
               s
             </div>
             <div class="font-semibold text-ink tracking-tight">sqlcraft</div>
           </div>
-          <Show when={ready()}>
-            <div class="flex items-center gap-2 text-xs text-ink-muted">
-              <div class="w-32 h-1.5 bg-bg-soft rounded-full overflow-hidden">
-                <div
-                  class="h-full bg-gradient-to-r from-accent to-accent-glow transition-all duration-500"
-                  style={{ width: `${(overallProgress().done / Math.max(overallProgress().total, 1)) * 100}%` }}
-                />
-              </div>
-              <span>{overallProgress().done}/{overallProgress().total} levels</span>
+          <Show when={ready() && currentLevel()}>
+            <div class="flex items-center gap-2 text-sm">
+              <span class="text-ink-dim">/</span>
+              <span class="text-ink-muted">{currentLevel()!.title.replace(/^Level \d+ · /, "")}</span>
             </div>
           </Show>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-4">
+          <Show when={ready()}>
+            <div class="flex items-center gap-2.5 text-xs text-ink-muted">
+              <div class="w-32 h-1 bg-bg-soft rounded-full overflow-hidden">
+                <div
+                  class="h-full bg-gradient-to-r from-accent to-accent-glow transition-all duration-700"
+                  style={{ width: `${(overallProgress().done / Math.max(overallProgress().total, 1)) * 100}%` }}
+                />
+              </div>
+              <span class="tabular-nums">{overallProgress().done}/{overallProgress().total} levels</span>
+            </div>
+          </Show>
           <Show when={!ready()}>
             <div class="text-xs text-ink-muted flex items-center gap-2">
               <div class="w-2 h-2 rounded-full bg-warn animate-pulse" /> {bootStatus()}
@@ -198,9 +196,10 @@ export default function App() {
           </Show>
           <button
             onClick={() => setShowSettings(true)}
-            class="text-xs px-3 py-1.5 text-ink-muted hover:text-ink rounded-md hover:bg-bg-panel transition-colors"
+            class="text-sm text-ink-muted hover:text-ink p-1.5 rounded-md hover:bg-bg-panel transition-colors"
+            title="Settings"
           >
-            ⚙ settings
+            ⚙
           </button>
         </div>
       </header>
@@ -209,25 +208,22 @@ export default function App() {
         <div class="flex-1 flex items-center justify-center">
           <div class="text-center max-w-md px-4">
             <div class="text-6xl mb-4 animate-pulse">🛠️</div>
-            <div class="text-ink text-lg font-medium mb-2">Getting your database ready…</div>
+            <div class="text-ink text-lg font-medium mb-2">Setting up your database</div>
             <div class="text-ink-muted text-sm mb-1">{bootStatus()}</div>
-            <div class="text-ink-dim text-xs">Postgres is downloading & starting (~3 MB). Cached forever after this.</div>
+            <div class="text-ink-dim text-xs">Postgres downloads once (~3 MB) and is cached forever after.</div>
           </div>
         </div>
       </Show>
 
       <Show when={ready()}>
-        <main class="flex-1 flex min-h-0">
-          <Show when={showSidebar()}>
-            <aside class="w-64 border-r border-bg-border bg-bg-soft/50 p-4 overflow-y-auto space-y-6 backdrop-blur-sm">
-              <LevelList currentId={currentLevelId()} progress={progress()} onPick={pickLevel} />
-              <SchemaSidebar schema={schema()} onInsert={insertText} />
-              <ScriptsSidebar currentSql={sql()} currentLevelId={currentLevelId()} onLoad={loadScript} />
-            </aside>
-          </Show>
+        <main class="flex-1 flex min-h-0 relative">
+          {/* Ultra-slim level rail */}
+          <aside class="w-14 border-r border-bg-border bg-bg-soft/30 overflow-y-auto flex-shrink-0">
+            <LevelList currentId={currentLevelId()} progress={progress()} onPick={pickLevel} />
+          </aside>
 
-          {/* Lesson + challenges */}
-          <section class="w-[440px] border-r border-bg-border bg-bg-soft/30 min-w-0">
+          {/* Lesson — wide, generous */}
+          <section class="flex-1 min-w-0 max-w-2xl border-r border-bg-border overflow-hidden">
             <Show when={currentLevel()}>
               <LessonPane
                 level={currentLevel()!}
@@ -241,9 +237,8 @@ export default function App() {
             </Show>
           </section>
 
-          {/* Editor + results */}
-          <section class="flex-1 flex flex-col min-w-0">
-            {/* Challenge strip — only when a challenge is active */}
+          {/* Solve — editor, banner, results */}
+          <section class="flex-1 flex flex-col min-w-0 relative">
             <Show when={activeChallenge() && currentLevel()}>
               {(_) => {
                 const c = activeChallenge()!;
@@ -265,30 +260,47 @@ export default function App() {
               }}
             </Show>
 
-            {/* Run row */}
-            <div class="flex items-center justify-between px-4 py-2.5 border-b border-bg-border bg-bg-panel/30">
-              <div class="text-xs text-ink-muted">
+            {/* Tools row */}
+            <div class="flex items-center justify-between px-4 py-2.5 border-b border-bg-border">
+              <div class="flex items-center gap-2 text-xs text-ink-muted">
                 <Show
                   when={activeChallenge()}
-                  fallback={<span>free play · run anything against the dataset</span>}
+                  fallback={<span>free play</span>}
                 >
                   <span>solving →</span>
                 </Show>
+                <button
+                  onClick={() => {
+                    setDrawerTab("schema");
+                    setDrawerOpen(true);
+                  }}
+                  class="ml-2 px-2.5 py-1 hover:bg-bg-panel rounded-md text-ink-muted hover:text-ink transition-colors"
+                >
+                  📋 schema
+                </button>
+                <button
+                  onClick={() => {
+                    setDrawerTab("scripts");
+                    setDrawerOpen(true);
+                  }}
+                  class="px-2.5 py-1 hover:bg-bg-panel rounded-md text-ink-muted hover:text-ink transition-colors"
+                >
+                  📁 scripts
+                </button>
               </div>
               <button
                 onClick={executeSql}
                 disabled={running()}
-                class="text-xs px-3.5 py-1.5 bg-accent hover:bg-accent-glow text-bg font-medium rounded-md disabled:opacity-50 shadow-md shadow-accent/20 transition-all"
+                class="text-xs px-4 py-1.5 bg-accent hover:bg-accent-glow text-bg font-semibold rounded-md disabled:opacity-50 shadow-md shadow-accent/20 transition-all"
               >
-                {running() ? "running…" : "▶ run  (⌘↵)"}
+                {running() ? "running…" : "▶ Run  (⌘↵)"}
               </button>
             </div>
 
-            <div class="h-[40%] border-b border-bg-border">
+            <div class="h-[42%] border-b border-bg-border bg-bg-soft/30">
               <Editor value={sql()} onChange={setSql} onRun={executeSql} schema={schemaForEditor()} />
             </div>
 
-            {/* Grade banner — right above results, never requires scrolling */}
             <Show when={lastGrade() && activeChallenge() && currentLevel()}>
               {(_) => {
                 const lvl = currentLevel()!;
@@ -308,9 +320,21 @@ export default function App() {
               }}
             </Show>
 
-            <div class="flex-1 p-3 min-h-0">
+            <div class="flex-1 p-4 min-h-0">
               <ResultsTable result={result()} loading={running()} />
             </div>
+
+            <RightDrawer
+              open={drawerOpen()}
+              onClose={() => setDrawerOpen(false)}
+              tab={drawerTab()}
+              setTab={setDrawerTab}
+              schema={schema()}
+              currentSql={sql()}
+              currentLevelId={currentLevelId()}
+              onInsertText={insertText}
+              onLoadScript={loadScript}
+            />
           </section>
         </main>
       </Show>
