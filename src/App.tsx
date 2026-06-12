@@ -12,6 +12,8 @@ import SettingsPanel from "./components/SettingsPanel";
 import LessonPane from "./components/LessonPane";
 import LevelList from "./components/LevelList";
 import Celebration from "./components/Celebration";
+import ChallengeStrip from "./components/ChallengeStrip";
+import GradeBanner from "./components/GradeBanner";
 
 export default function App() {
   const [bootStatus, setBootStatus] = createSignal("starting up…");
@@ -230,8 +232,7 @@ export default function App() {
               <LessonPane
                 level={currentLevel()!}
                 solvedIds={solvedIds()}
-                activeChallenge={activeChallenge()}
-                lastGrade={lastGrade()}
+                activeChallengeId={activeChallenge()?.id ?? null}
                 onPickChallenge={pickChallenge}
                 onTryExample={tryExample}
                 onNextLevel={() => nextLevel() && pickLevel(nextLevel()!.id)}
@@ -242,13 +243,36 @@ export default function App() {
 
           {/* Editor + results */}
           <section class="flex-1 flex flex-col min-w-0">
+            {/* Challenge strip — only when a challenge is active */}
+            <Show when={activeChallenge() && currentLevel()}>
+              {(_) => {
+                const c = activeChallenge()!;
+                const lvl = currentLevel()!;
+                const idx = lvl.challenges.findIndex((x) => x.id === c.id);
+                const nextChallenge = lvl.challenges.find((x, i) => i > idx && !solvedIds().includes(x.id))
+                  ?? lvl.challenges[idx + 1];
+                return (
+                  <ChallengeStrip
+                    challenge={c}
+                    index={idx}
+                    total={lvl.challenges.length}
+                    solved={solvedIds().includes(c.id)}
+                    hasNext={!!nextChallenge}
+                    onClear={() => pickChallenge(null)}
+                    onNext={() => nextChallenge && pickChallenge(nextChallenge)}
+                  />
+                );
+              }}
+            </Show>
+
+            {/* Run row */}
             <div class="flex items-center justify-between px-4 py-2.5 border-b border-bg-border bg-bg-panel/30">
               <div class="text-xs text-ink-muted">
                 <Show
                   when={activeChallenge()}
-                  fallback={<span>free play · write any query</span>}
+                  fallback={<span>free play · run anything against the dataset</span>}
                 >
-                  <span>solving: <span class="text-accent font-medium">{activeChallenge()!.id}</span></span>
+                  <span>solving →</span>
                 </Show>
               </div>
               <button
@@ -259,9 +283,31 @@ export default function App() {
                 {running() ? "running…" : "▶ run  (⌘↵)"}
               </button>
             </div>
-            <div class="h-[45%] border-b border-bg-border">
+
+            <div class="h-[40%] border-b border-bg-border">
               <Editor value={sql()} onChange={setSql} onRun={executeSql} schema={schemaForEditor()} />
             </div>
+
+            {/* Grade banner — right above results, never requires scrolling */}
+            <Show when={lastGrade() && activeChallenge() && currentLevel()}>
+              {(_) => {
+                const lvl = currentLevel()!;
+                const c = activeChallenge()!;
+                const idx = lvl.challenges.findIndex((x) => x.id === c.id);
+                const nextChallenge = lvl.challenges.find((x, i) => i > idx && !solvedIds().includes(x.id))
+                  ?? lvl.challenges[idx + 1];
+                return (
+                  <GradeBanner
+                    grade={lastGrade()!}
+                    solvedCount={solvedIds().filter((id) => lvl.challenges.find((x) => x.id === id)).length}
+                    total={lvl.challenges.length}
+                    hasNext={!!nextChallenge && lastGrade()!.pass}
+                    onNext={() => nextChallenge && pickChallenge(nextChallenge)}
+                  />
+                );
+              }}
+            </Show>
+
             <div class="flex-1 p-3 min-h-0">
               <ResultsTable result={result()} loading={running()} />
             </div>
