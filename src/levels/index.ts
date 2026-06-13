@@ -15,6 +15,10 @@ import seed04 from "./04-aggregates/seed.sql?raw";
 import lesson04 from "./04-aggregates/lesson.md?raw";
 import { challenges as challenges04 } from "./04-aggregates/challenges";
 
+import seed05 from "./05-having/seed.sql?raw";
+import lesson05 from "./05-having/lesson.md?raw";
+import { challenges as challenges05 } from "./05-having/challenges";
+
 import type { Challenge } from "./types";
 export { resolveExpected } from "./types";
 export type { Challenge };
@@ -81,7 +85,18 @@ export const LEVELS: Level[] = [
     available: true,
     sentinelTable: "books",
   },
-  { id: "05-having", title: "Level 5 · GROUP BY & HAVING", subtitle: "E-commerce orders", concept: "HAVING, multi-column GROUP BY", dataset: "orders", seed: "", lesson: "", challenges: [], available: false },
+  {
+    id: "05-having",
+    title: "Level 5 · HAVING",
+    subtitle: "Books (cont.)",
+    concept: "HAVING, WHERE vs HAVING, query execution order",
+    dataset: "books (50 rows, reused)",
+    seed: seed05,
+    lesson: lesson05,
+    challenges: challenges05,
+    available: true,
+    sentinelTable: "books",
+  },
   { id: "06-joins", title: "Level 6 · JOINs", subtitle: "Movies + actors", concept: "INNER, LEFT, RIGHT, FULL JOIN", dataset: "movies", seed: "", lesson: "", challenges: [], available: false },
   { id: "07-multi-join", title: "Level 7 · Multi-table joins", subtitle: "Movies + actors", concept: "self-joins, chains", dataset: "movies", seed: "", lesson: "", challenges: [], available: false },
   { id: "08-subqueries", title: "Level 8 · Subqueries", subtitle: "Pokemon", concept: "subqueries, EXISTS, IN (SELECT...)", dataset: "pokemon", seed: "", lesson: "", challenges: [], available: false },

@@ -283,11 +283,15 @@ export default function App() {
                 </div>
                 <Show
                   when={!!nextLevel()}
-                  fallback={<div class="label-mono text-ink-dim">end of built content</div>}
+                  fallback={
+                    <div class="flex items-center gap-3">
+                      <div class="label-mono text-ink-dim">end of built content — more levels coming</div>
+                    </div>
+                  }
                 >
                   <button
                     onClick={() => nextLevel() && pickLevel(nextLevel()!.id)}
-                    class="flex items-center gap-1.5 px-3 py-1.5 bg-accent hover:bg-accent-glow text-bg font-semibold transition-colors rounded"
+                    class="flex items-center gap-1.5 px-3 py-1.5 bg-accent hover:bg-accent-glow text-bg font-semibold transition-colors rounded animate-bounce-in"
                   >
                     <span class="label-mono text-bg">next level</span>
                     <IconArrowRight class="w-3.5 h-3.5 text-bg" />
