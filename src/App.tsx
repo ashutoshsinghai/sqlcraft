@@ -301,24 +301,27 @@ export default function App() {
             </Show>
 
             <Show when={activeChallenge() && currentLevel()}>
-              {(_) => {
-                const c = activeChallenge()!;
-                const lvl = currentLevel()!;
-                const idx = lvl.challenges.findIndex((x) => x.id === c.id);
-                const nextChallenge = lvl.challenges.find((x, i) => i > idx && !solvedIds().includes(x.id))
-                  ?? lvl.challenges[idx + 1];
-                return (
-                  <ChallengeStrip
-                    challenge={c}
-                    index={idx}
-                    total={lvl.challenges.length}
-                    solved={solvedIds().includes(c.id)}
-                    hasNext={!!nextChallenge}
-                    onClear={() => pickChallenge(null)}
-                    onNext={() => nextChallenge && pickChallenge(nextChallenge)}
-                  />
-                );
-              }}
+              <ChallengeStrip
+                challenge={activeChallenge()!}
+                index={currentLevel()!.challenges.findIndex((x) => x.id === activeChallenge()!.id)}
+                total={currentLevel()!.challenges.length}
+                solved={solvedIds().includes(activeChallenge()!.id)}
+                hasNext={(() => {
+                  const lvl = currentLevel()!;
+                  const c = activeChallenge()!;
+                  const idx = lvl.challenges.findIndex((x) => x.id === c.id);
+                  const nc = lvl.challenges.find((x, i) => i > idx && !solvedIds().includes(x.id)) ?? lvl.challenges[idx + 1];
+                  return !!nc;
+                })()}
+                onClear={() => pickChallenge(null)}
+                onNext={() => {
+                  const lvl = currentLevel()!;
+                  const c = activeChallenge()!;
+                  const idx = lvl.challenges.findIndex((x) => x.id === c.id);
+                  const nc = lvl.challenges.find((x, i) => i > idx && !solvedIds().includes(x.id)) ?? lvl.challenges[idx + 1];
+                  if (nc) pickChallenge(nc);
+                }}
+              />
             </Show>
 
             {/* Tools row */}
@@ -393,24 +396,27 @@ export default function App() {
 
                 {/* Grade banner — inline at the top of results, doesn't push the table down disastrously */}
                 <Show when={lastGrade() && activeChallenge() && currentLevel()}>
-                  {(_) => {
-                    const lvl = currentLevel()!;
-                    const c = activeChallenge()!;
-                    const idx = lvl.challenges.findIndex((x) => x.id === c.id);
-                    const nextChallenge = lvl.challenges.find((x, i) => i > idx && !solvedIds().includes(x.id))
-                      ?? lvl.challenges[idx + 1];
-                    return (
-                      <div class="flex-shrink-0">
-                        <GradeBanner
-                          grade={lastGrade()!}
-                          solvedCount={solvedIds().filter((id) => lvl.challenges.find((x) => x.id === id)).length}
-                          total={lvl.challenges.length}
-                          hasNext={!!nextChallenge && lastGrade()!.pass}
-                          onNext={() => nextChallenge && pickChallenge(nextChallenge)}
-                        />
-                      </div>
-                    );
-                  }}
+                  <div class="flex-shrink-0">
+                    <GradeBanner
+                      grade={lastGrade()!}
+                      solvedCount={solvedIds().filter((id) => currentLevel()!.challenges.find((x) => x.id === id)).length}
+                      total={currentLevel()!.challenges.length}
+                      hasNext={(() => {
+                        const lvl = currentLevel()!;
+                        const c = activeChallenge()!;
+                        const idx = lvl.challenges.findIndex((x) => x.id === c.id);
+                        const nc = lvl.challenges.find((x, i) => i > idx && !solvedIds().includes(x.id)) ?? lvl.challenges[idx + 1];
+                        return !!nc && lastGrade()!.pass;
+                      })()}
+                      onNext={() => {
+                        const lvl = currentLevel()!;
+                        const c = activeChallenge()!;
+                        const idx = lvl.challenges.findIndex((x) => x.id === c.id);
+                        const nc = lvl.challenges.find((x, i) => i > idx && !solvedIds().includes(x.id)) ?? lvl.challenges[idx + 1];
+                        if (nc) pickChallenge(nc);
+                      }}
+                    />
+                  </div>
                 </Show>
 
                 {/* Actual results scroll area — flex-1 + min-h-0 guarantees a real height */}
