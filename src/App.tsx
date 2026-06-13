@@ -13,7 +13,7 @@ import Celebration from "./components/Celebration";
 import ChallengeStrip from "./components/ChallengeStrip";
 import GradeBanner from "./components/GradeBanner";
 import RightDrawer from "./components/RightDrawer";
-import { IconSchema, IconScripts, IconRun, IconSettings } from "./components/Icons";
+import { IconSchema, IconScripts, IconRun, IconSettings, IconCheck, IconArrowRight } from "./components/Icons";
 
 export default function App() {
   const [bootStatus, setBootStatus] = createSignal("starting up…");
@@ -269,6 +269,33 @@ export default function App() {
 
           {/* Solve — editor, banner, results */}
           <section class="flex-1 flex flex-col min-w-0 relative">
+            {/* Persistent "level complete" bar — visible whenever the current level is fully solved */}
+            <Show when={currentLevel() && currentLevel()!.challenges.length > 0 && currentLevel()!.challenges.every((c) => solvedIds().includes(c.id))}>
+              <div class="flex items-center justify-between px-4 py-2.5 border-b border-success/30 bg-success/[0.06]">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-5 h-5 bg-success/20 border border-success/40 flex items-center justify-center text-success rounded">
+                    <IconCheck class="w-3 h-3" />
+                  </div>
+                  <div>
+                    <div class="label-mono text-success">level complete</div>
+                    <div class="text-[11px] text-ink-muted">All {currentLevel()!.challenges.length} challenges solved</div>
+                  </div>
+                </div>
+                <Show
+                  when={!!nextLevel()}
+                  fallback={<div class="label-mono text-ink-dim">end of built content</div>}
+                >
+                  <button
+                    onClick={() => nextLevel() && pickLevel(nextLevel()!.id)}
+                    class="flex items-center gap-1.5 px-3 py-1.5 bg-accent hover:bg-accent-glow text-bg font-semibold transition-colors rounded"
+                  >
+                    <span class="label-mono text-bg">next level</span>
+                    <IconArrowRight class="w-3.5 h-3.5 text-bg" />
+                  </button>
+                </Show>
+              </div>
+            </Show>
+
             <Show when={activeChallenge() && currentLevel()}>
               {(_) => {
                 const c = activeChallenge()!;
