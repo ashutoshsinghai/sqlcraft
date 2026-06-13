@@ -11,6 +11,10 @@ import seed03 from "./03-order-limit/seed.sql?raw";
 import lesson03 from "./03-order-limit/lesson.md?raw";
 import { challenges as challenges03 } from "./03-order-limit/challenges";
 
+import seed04 from "./04-aggregates/seed.sql?raw";
+import lesson04 from "./04-aggregates/lesson.md?raw";
+import { challenges as challenges04 } from "./04-aggregates/challenges";
+
 import type { Challenge } from "./types";
 export { resolveExpected } from "./types";
 export type { Challenge };
@@ -65,7 +69,18 @@ export const LEVELS: Level[] = [
     available: true,
     sentinelTable: "books",
   },
-  { id: "04-aggregates", title: "Level 4 · Aggregates", subtitle: "E-commerce orders", concept: "COUNT, SUM, AVG, GROUP BY", dataset: "orders", seed: "", lesson: "", challenges: [], available: false },
+  {
+    id: "04-aggregates",
+    title: "Level 4 · Aggregates & GROUP BY",
+    subtitle: "Books (cont.)",
+    concept: "COUNT, SUM, AVG, MIN, MAX, GROUP BY",
+    dataset: "books (50 rows, reused)",
+    seed: seed04,
+    lesson: lesson04,
+    challenges: challenges04,
+    available: true,
+    sentinelTable: "books",
+  },
   { id: "05-having", title: "Level 5 · GROUP BY & HAVING", subtitle: "E-commerce orders", concept: "HAVING, multi-column GROUP BY", dataset: "orders", seed: "", lesson: "", challenges: [], available: false },
   { id: "06-joins", title: "Level 6 · JOINs", subtitle: "Movies + actors", concept: "INNER, LEFT, RIGHT, FULL JOIN", dataset: "movies", seed: "", lesson: "", challenges: [], available: false },
   { id: "07-multi-join", title: "Level 7 · Multi-table joins", subtitle: "Movies + actors", concept: "self-joins, chains", dataset: "movies", seed: "", lesson: "", challenges: [], available: false },

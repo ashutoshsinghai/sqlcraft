@@ -1,4 +1,4 @@
-import { Show, createSignal, createEffect } from "solid-js";
+import { Show, createSignal, createEffect, on } from "solid-js";
 import type { GradeResult } from "../lib/grader";
 import { IconCheck, IconCross, IconArrowRight } from "./Icons";
 
@@ -13,10 +13,7 @@ interface Props {
 export default function GradeBanner(props: Props) {
   const [showDetails, setShowDetails] = createSignal(false);
 
-  createEffect(() => {
-    props.grade;
-    setShowDetails(false);
-  });
+  createEffect(on(() => props.grade, () => setShowDetails(false), { defer: true }));
 
   return (
     <Show

@@ -1,4 +1,4 @@
-import { For, Show, createSignal, createEffect } from "solid-js";
+import { For, Show, createSignal, createEffect, on } from "solid-js";
 import { marked } from "marked";
 import type { Challenge } from "../levels";
 import { IconHint, IconArrowRight, IconClose } from "./Icons";
@@ -16,11 +16,8 @@ interface Props {
 export default function ChallengeStrip(props: Props) {
   const [showHint, setShowHint] = createSignal(0);
 
-  // Reset hint counter when challenge switches
-  createEffect(() => {
-    props.challenge.id;
-    setShowHint(0);
-  });
+  // Reset hint counter when challenge switches — `on()` reliably tracks the prop accessor
+  createEffect(on(() => props.challenge.id, () => setShowHint(0), { defer: true }));
 
   return (
     <div class="border-b border-bg-border bg-bg-soft/30">
