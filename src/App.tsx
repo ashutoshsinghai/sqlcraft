@@ -268,7 +268,7 @@ export default function App() {
           </section>
 
           {/* Solve — editor, banner, results */}
-          <section class="flex-1 flex flex-col min-w-0 relative">
+          <section class="flex-1 flex flex-col min-w-0 min-h-0 relative">
             {/* Persistent "level complete" bar — visible whenever the current level is fully solved */}
             <Show when={currentLevel() && currentLevel()!.challenges.length > 0 && currentLevel()!.challenges.every((c) => solvedIds().includes(c.id))}>
               <div class="flex items-center justify-between px-4 py-2.5 border-b border-success/30 bg-success/[0.06]">
@@ -353,7 +353,8 @@ export default function App() {
             </div>
 
             <div ref={splitRef} class="flex-1 flex flex-col min-h-0">
-              <div class="bg-bg-soft/30 overflow-hidden" style={{ height: `${editorPct()}%` }}>
+              {/* Editor pane */}
+              <div class="bg-bg-soft/30 overflow-hidden min-h-0" style={{ height: `${editorPct()}%` }}>
                 <Editor value={sql()} onChange={setSql} onRun={executeSql} schema={schemaForEditor()} />
               </div>
 
@@ -361,59 +362,66 @@ export default function App() {
               <div
                 onMouseDown={startDrag}
                 onDblClick={resetSplit}
-                class="group relative h-1.5 bg-bg-border hover:bg-accent/40 cursor-row-resize transition-colors flex-shrink-0"
+                class="group relative h-1.5 bg-bg-border hover:bg-accent/50 cursor-row-resize transition-colors flex-shrink-0"
                 title="Drag to resize · double-click to reset"
               >
-                <div class="absolute inset-x-0 top-1/2 -translate-y-1/2 h-px bg-bg-border group-hover:bg-accent/60" />
+                <div class="absolute inset-x-0 top-1/2 -translate-y-1/2 h-px bg-bg-border group-hover:bg-accent/70" />
               </div>
 
-              <Show when={lastGrade() && activeChallenge() && currentLevel()}>
-                {(_) => {
-                  const lvl = currentLevel()!;
-                  const c = activeChallenge()!;
-                  const idx = lvl.challenges.findIndex((x) => x.id === c.id);
-                  const nextChallenge = lvl.challenges.find((x, i) => i > idx && !solvedIds().includes(x.id))
-                    ?? lvl.challenges[idx + 1];
-                  return (
-                    <GradeBanner
-                      grade={lastGrade()!}
-                      solvedCount={solvedIds().filter((id) => lvl.challenges.find((x) => x.id === id)).length}
-                      total={lvl.challenges.length}
-                      hasNext={!!nextChallenge && lastGrade()!.pass}
-                      onNext={() => nextChallenge && pickChallenge(nextChallenge)}
-                    />
-                  );
-                }}
-              </Show>
-
-              {/* Results header with quick expand */}
-              <div class="flex items-center justify-between px-3 pt-2 pb-1 flex-shrink-0">
-                <div class="label-mono text-ink-dim">results</div>
-                <div class="flex items-center gap-0.5">
-                  <button
-                    onClick={maximizeResults}
-                    title="Maximize results"
-                    class="px-2 py-0.5 text-ink-muted hover:text-ink hover:bg-bg-panel transition-colors rounded"
-                  >
-                    <span class="label-mono">expand</span>
-                  </button>
-                  <button
-                    onClick={resetSplit}
-                    title="Reset split"
-                    class="px-2 py-0.5 text-ink-muted hover:text-ink hover:bg-bg-panel transition-colors rounded"
-                  >
-                    <span class="label-mono">reset</span>
-                  </button>
+              {/* Results pane — fixed flex child, all results UI inside it */}
+              <div class="flex-1 flex flex-col min-h-0 border-t border-bg-border">
+                {/* Results header bar */}
+                <div class="flex items-center justify-between px-3 py-1.5 border-b border-bg-border bg-bg-soft/30 flex-shrink-0">
+                  <div class="label-mono text-ink-dim">results</div>
+                  <div class="flex items-center gap-0.5">
+                    <button
+                      onClick={maximizeResults}
+                      title="Maximize results pane"
+                      class="px-2 py-0.5 text-ink-muted hover:text-ink hover:bg-bg-panel transition-colors rounded"
+                    >
+                      <span class="label-mono">expand</span>
+                    </button>
+                    <button
+                      onClick={resetSplit}
+                      title="Reset split"
+                      class="px-2 py-0.5 text-ink-muted hover:text-ink hover:bg-bg-panel transition-colors rounded"
+                    >
+                      <span class="label-mono">reset</span>
+                    </button>
+                  </div>
                 </div>
-              </div>
 
-              <div class="flex-1 px-3 pb-3 min-h-0">
-                <ResultsTable
-                  result={result()}
-                  loading={running()}
-                  executedSql={executedSql()}
-                  isStale={!!executedSql() && executedSql() !== sql()}
-                />
+                {/* Grade banner — inline at the top of results, doesn't push the table down disastrously */}
+                <Show when={lastGrade() && activeChallenge() && currentLevel()}>
+                  {(_) => {
+                    const lvl = currentLevel()!;
+                    const c = activeChallenge()!;
+                    const idx = lvl.challenges.findIndex((x) => x.id === c.id);
+                    const nextChallenge = lvl.challenges.find((x, i) => i > idx && !solvedIds().includes(x.id))
+                      ?? lvl.challenges[idx + 1];
+                    return (
+                      <div class="flex-shrink-0">
+                        <GradeBanner
+                          grade={lastGrade()!}
+                          solvedCount={solvedIds().filter((id) => lvl.challenges.find((x) => x.id === id)).length}
+                          total={lvl.challenges.length}
+                          hasNext={!!nextChallenge && lastGrade()!.pass}
+                          onNext={() => nextChallenge && pickChallenge(nextChallenge)}
+                        />
+                      </div>
+                    );
+                  }}
+                </Show>
+
+                {/* Actual results scroll area — flex-1 + min-h-0 guarantees a real height */}
+                <div class="flex-1 min-h-0 px-3 pb-3 pt-2">
+                  <ResultsTable
+                    result={result()}
+                    loading={running()}
+                    executedSql={executedSql()}
+                    isStale={!!executedSql() && executedSql() !== sql()}
+                  />
+                </div>
               </div>
             </div>
 

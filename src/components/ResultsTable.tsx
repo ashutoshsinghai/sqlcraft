@@ -14,7 +14,7 @@ function formatCell(v: unknown): string {
   return String(v);
 }
 
-function previewSql(sql: string, max = 120): string {
+function previewSql(sql: string, max = 140): string {
   const flat = sql.replace(/\s+/g, " ").trim();
   return flat.length > max ? flat.slice(0, max - 1) + "…" : flat;
 }
@@ -27,19 +27,20 @@ export default function ResultsTable(props: Props) {
   });
 
   return (
-    <div class="h-full overflow-hidden bg-bg-soft/40 border border-bg-border rounded-xl flex flex-col">
+    <div class="h-full w-full bg-bg-soft/30 border border-bg-border rounded flex flex-col min-h-0 overflow-hidden">
       <Show when={props.loading}>
-        <div class="p-5 text-ink-muted text-sm flex items-center gap-2">
+        <div class="p-4 text-ink-muted text-sm flex items-center gap-2">
           <div class="w-2 h-2 rounded-full bg-accent animate-pulse" /> Running query…
         </div>
       </Show>
 
       <Show when={!props.loading && !props.result}>
-        <div class="p-10 text-center text-ink-dim text-sm flex-1 flex flex-col items-center justify-center">
-          <div class="text-2xl mb-3 opacity-50">⌨</div>
-          <div class="mb-1 text-ink-muted">Run a query to see results.</div>
-          <div class="text-xs">
-            Press <span class="font-mono text-ink-muted bg-bg-panel px-1.5 py-0.5 rounded">⌘ + Enter</span> in the editor.
+        <div class="flex-1 flex items-center justify-center p-10 text-center text-ink-dim">
+          <div>
+            <div class="label-mono text-ink-dim mb-2">no query yet</div>
+            <div class="text-xs font-mono">
+              press <span class="text-ink-muted bg-bg-panel px-1.5 py-0.5 rounded">⌘↵</span> in the editor
+            </div>
           </div>
         </div>
       </Show>
@@ -48,19 +49,19 @@ export default function ResultsTable(props: Props) {
         {(_) => {
           const err = props.result as QueryError;
           return (
-            <div class="flex flex-col h-full">
+            <div class="flex flex-col h-full min-h-0">
+              <div class="flex items-center gap-3 px-3 py-2 border-b border-bg-border bg-bg-soft/40 flex-shrink-0">
+                <span class="label-mono bg-danger/15 text-danger px-1.5 py-0.5 rounded">error</span>
+                <span class="text-xs text-ink-muted tabular-nums font-mono">{err.durationMs} ms</span>
+              </div>
               <Show when={props.executedSql}>
-                <div class="px-4 py-2 border-b border-bg-border bg-bg-soft/40">
-                  <div class="text-[10px] uppercase tracking-wider text-ink-dim mb-1">ran</div>
-                  <div class="text-[11px] font-mono text-ink-muted break-all">{previewSql(props.executedSql!)}</div>
+                <div class="px-3 py-1.5 border-b border-bg-border bg-bg-soft/20 flex-shrink-0">
+                  <span class="label-mono text-ink-dim mr-2">ran</span>
+                  <span class="text-[11px] font-mono text-ink-muted break-all">{previewSql(props.executedSql!)}</span>
                 </div>
               </Show>
-              <div class="p-4 font-mono text-sm overflow-auto">
-                <div class="text-danger mb-2 flex items-center gap-2">
-                  <span class="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-danger/20 font-sans font-medium">error</span>
-                  <span class="text-xs text-ink-dim">{err.durationMs}ms</span>
-                </div>
-                <pre class="text-ink whitespace-pre-wrap">{err.error}</pre>
+              <div class="flex-1 overflow-auto p-3 min-h-0">
+                <pre class="text-[12px] font-mono text-danger whitespace-pre-wrap">{err.error}</pre>
               </div>
             </div>
           );
@@ -71,33 +72,42 @@ export default function ResultsTable(props: Props) {
         {(_) => {
           const r = props.result as QueryResult;
           return (
-            <div class="flex flex-col h-full overflow-hidden">
-              <div class={`flex items-center gap-3 px-4 py-2.5 border-b border-bg-border ${props.isStale ? "opacity-50" : ""}`}>
-                <span class="w-1.5 h-1.5 rounded-full bg-success" />
-                <span class="text-xs text-ink tabular-nums font-medium">{r.rowCount} row{r.rowCount === 1 ? "" : "s"}</span>
+            <div class="flex flex-col h-full min-h-0">
+              {/* Status bar */}
+              <div class={`flex items-center gap-3 px-3 py-2 border-b border-bg-border bg-bg-soft/40 flex-shrink-0 ${props.isStale ? "opacity-50" : ""}`}>
+                <span class="w-1.5 h-1.5 rounded-full bg-success flex-shrink-0" />
+                <span class="text-xs text-ink tabular-nums font-mono font-medium">{r.rowCount} row{r.rowCount === 1 ? "" : "s"}</span>
                 <span class="text-ink-dim text-xs">·</span>
-                <span class="text-xs text-ink-muted tabular-nums">{r.durationMs} ms</span>
+                <span class="text-xs text-ink-muted tabular-nums font-mono">{r.durationMs} ms</span>
                 <Show when={props.isStale}>
-                  <span class="text-xs text-warn ml-2">⚠ editor edited — re-run to refresh</span>
+                  <span class="label-mono text-warn ml-auto">⚠ edited — re-run</span>
                 </Show>
               </div>
+
+              {/* Executed SQL preview */}
               <Show when={props.executedSql}>
-                <div class="px-4 py-2 border-b border-bg-border bg-bg-soft/30">
-                  <div class="text-[10px] uppercase tracking-wider text-ink-dim mb-0.5">ran</div>
-                  <div class="text-[11px] font-mono text-ink-muted break-all">{previewSql(props.executedSql!)}</div>
+                <div class="px-3 py-1.5 border-b border-bg-border bg-bg-soft/20 flex-shrink-0">
+                  <span class="label-mono text-ink-dim mr-2">ran</span>
+                  <span class="text-[11px] font-mono text-ink-muted break-all">{previewSql(props.executedSql!)}</span>
                 </div>
               </Show>
+
               <Show
                 when={r.rows.length > 0}
-                fallback={<div class="p-4 text-ink-dim text-sm">Query succeeded; no rows returned.</div>}
+                fallback={
+                  <div class="flex-1 flex items-center justify-center text-ink-dim text-sm font-mono">
+                    query succeeded · no rows returned
+                  </div>
+                }
               >
-                <div class="flex-1 overflow-auto">
-                  <table class="w-full text-xs font-mono">
-                    <thead class="bg-bg-soft/60 sticky top-0">
+                {/* Scrollable table area — both directions */}
+                <div class="flex-1 overflow-auto min-h-0">
+                  <table class="text-xs font-mono w-max min-w-full">
+                    <thead class="bg-bg-soft/80 sticky top-0 z-10">
                       <tr>
                         <For each={cols()}>
                           {(c) => (
-                            <th class="text-left px-4 py-2 text-ink-muted font-medium border-b border-bg-border whitespace-nowrap text-[10px] uppercase tracking-wider">
+                            <th class="label-mono text-left px-3 py-2 text-ink-muted border-b border-bg-border whitespace-nowrap">
                               {c}
                             </th>
                           )}
@@ -107,14 +117,14 @@ export default function ResultsTable(props: Props) {
                     <tbody>
                       <For each={r.rows}>
                         {(row) => (
-                          <tr class="border-b border-bg-border/40 hover:bg-bg-soft/40">
+                          <tr class="border-b border-bg-border/40 hover:bg-bg-soft/50">
                             <For each={cols()}>
                               {(c) => {
                                 const val = row[c];
                                 const isNull = val === null || val === undefined;
                                 return (
                                   <td
-                                    class={`px-4 py-1.5 whitespace-nowrap ${isNull ? "text-ink-dim italic" : "text-ink"}`}
+                                    class={`px-3 py-1.5 whitespace-nowrap ${isNull ? "text-ink-dim italic" : "text-ink"}`}
                                   >
                                     {formatCell(val)}
                                   </td>
