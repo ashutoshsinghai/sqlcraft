@@ -31,6 +31,8 @@ export default function App() {
   const [activeChallenge, setActiveChallenge] = createSignal<Challenge | null>(null);
   const [lastGrade, setLastGrade] = createSignal<GradeResult | null>(null);
   const [executedSql, setExecutedSql] = createSignal<string | null>(null);
+  const [editorPct, setEditorPct] = createSignal<number>(getPref("editorPct", 42));
+  let splitRef: HTMLDivElement | undefined;
   const [progress, setProgressMap] = createSignal<Record<string, "untouched" | "in-progress" | "completed">>({});
   const [solvedIds, setSolvedIds] = createSignal<string[]>([]);
 
@@ -58,6 +60,34 @@ export default function App() {
 
   createEffect(() => setPref("lastSql", sql()));
   createEffect(() => setPref("currentLevel", currentLevelId()));
+  createEffect(() => setPref("editorPct", editorPct()));
+
+  function startDrag(e: MouseEvent) {
+    e.preventDefault();
+    if (!splitRef) return;
+    const rect = splitRef.getBoundingClientRect();
+    const onMove = (m: MouseEvent) => {
+      const pct = ((m.clientY - rect.top) / rect.height) * 100;
+      setEditorPct(Math.max(15, Math.min(85, pct)));
+    };
+    const onUp = () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+      document.body.style.userSelect = "";
+      document.body.style.cursor = "";
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    document.body.style.userSelect = "none";
+    document.body.style.cursor = "row-resize";
+  }
+
+  function maximizeResults() {
+    setEditorPct(20);
+  }
+  function resetSplit() {
+    setEditorPct(42);
+  }
 
   async function ensureSeeded(levelId: string) {
     const lvl = getLevel(levelId);
@@ -291,36 +321,69 @@ export default function App() {
               </button>
             </div>
 
-            <div class="h-[42%] border-b border-bg-border bg-bg-soft/30">
-              <Editor value={sql()} onChange={setSql} onRun={executeSql} schema={schemaForEditor()} />
-            </div>
+            <div ref={splitRef} class="flex-1 flex flex-col min-h-0">
+              <div class="bg-bg-soft/30 overflow-hidden" style={{ height: `${editorPct()}%` }}>
+                <Editor value={sql()} onChange={setSql} onRun={executeSql} schema={schemaForEditor()} />
+              </div>
 
-            <Show when={lastGrade() && activeChallenge() && currentLevel()}>
-              {(_) => {
-                const lvl = currentLevel()!;
-                const c = activeChallenge()!;
-                const idx = lvl.challenges.findIndex((x) => x.id === c.id);
-                const nextChallenge = lvl.challenges.find((x, i) => i > idx && !solvedIds().includes(x.id))
-                  ?? lvl.challenges[idx + 1];
-                return (
-                  <GradeBanner
-                    grade={lastGrade()!}
-                    solvedCount={solvedIds().filter((id) => lvl.challenges.find((x) => x.id === id)).length}
-                    total={lvl.challenges.length}
-                    hasNext={!!nextChallenge && lastGrade()!.pass}
-                    onNext={() => nextChallenge && pickChallenge(nextChallenge)}
-                  />
-                );
-              }}
-            </Show>
+              {/* Drag handle */}
+              <div
+                onMouseDown={startDrag}
+                onDblClick={resetSplit}
+                class="group relative h-1.5 bg-bg-border hover:bg-accent/40 cursor-row-resize transition-colors flex-shrink-0"
+                title="Drag to resize · double-click to reset"
+              >
+                <div class="absolute inset-x-0 top-1/2 -translate-y-1/2 h-px bg-bg-border group-hover:bg-accent/60" />
+              </div>
 
-            <div class="flex-1 p-4 min-h-0">
-              <ResultsTable
-                result={result()}
-                loading={running()}
-                executedSql={executedSql()}
-                isStale={!!executedSql() && executedSql() !== sql()}
-              />
+              <Show when={lastGrade() && activeChallenge() && currentLevel()}>
+                {(_) => {
+                  const lvl = currentLevel()!;
+                  const c = activeChallenge()!;
+                  const idx = lvl.challenges.findIndex((x) => x.id === c.id);
+                  const nextChallenge = lvl.challenges.find((x, i) => i > idx && !solvedIds().includes(x.id))
+                    ?? lvl.challenges[idx + 1];
+                  return (
+                    <GradeBanner
+                      grade={lastGrade()!}
+                      solvedCount={solvedIds().filter((id) => lvl.challenges.find((x) => x.id === id)).length}
+                      total={lvl.challenges.length}
+                      hasNext={!!nextChallenge && lastGrade()!.pass}
+                      onNext={() => nextChallenge && pickChallenge(nextChallenge)}
+                    />
+                  );
+                }}
+              </Show>
+
+              {/* Results header with quick expand */}
+              <div class="flex items-center justify-between px-3 pt-2 pb-1 flex-shrink-0">
+                <div class="label-mono text-ink-dim">results</div>
+                <div class="flex items-center gap-0.5">
+                  <button
+                    onClick={maximizeResults}
+                    title="Maximize results"
+                    class="px-2 py-0.5 text-ink-muted hover:text-ink hover:bg-bg-panel transition-colors rounded"
+                  >
+                    <span class="label-mono">expand</span>
+                  </button>
+                  <button
+                    onClick={resetSplit}
+                    title="Reset split"
+                    class="px-2 py-0.5 text-ink-muted hover:text-ink hover:bg-bg-panel transition-colors rounded"
+                  >
+                    <span class="label-mono">reset</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="flex-1 px-3 pb-3 min-h-0">
+                <ResultsTable
+                  result={result()}
+                  loading={running()}
+                  executedSql={executedSql()}
+                  isStale={!!executedSql() && executedSql() !== sql()}
+                />
+              </div>
             </div>
 
             <RightDrawer
